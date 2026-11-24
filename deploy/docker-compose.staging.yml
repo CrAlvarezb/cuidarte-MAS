@@ -1,0 +1,8 @@
+# Override para el despliegue (CD): usa las imágenes publicadas en GHCR
+# en lugar de construirlas, garantizando que se despliega exactamente
+# el artefacto que pasó por CI.
+services:
+  cuidarteplus-backend-ev:
+    image: ghcr.io/${IMAGE_OWNER}/cuidarteplus-backend:${IMAGE_TAG:-latest}
+  cuidarteplus-frontend-ev:
+    image: ghcr.io/${IMAGE_OWNER}/cuidarteplus-frontend:${IMAGE_TAG:-latest}

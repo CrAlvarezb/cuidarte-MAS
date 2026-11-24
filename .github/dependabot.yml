@@ -1,0 +1,27 @@
+# Plan de mantenimiento automatizado: Dependabot revisa semanalmente
+# dependencias npm, imágenes base Docker y acciones de GitHub, y abre
+# pull requests que deben pasar por los pipelines CI y Security.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /BACKEND
+    schedule:
+      interval: weekly
+    labels: [dependencias, seguridad]
+  - package-ecosystem: npm
+    directory: /FRONTEND
+    schedule:
+      interval: weekly
+    labels: [dependencias, seguridad]
+  - package-ecosystem: docker
+    directory: /BACKEND
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: /FRONTEND
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

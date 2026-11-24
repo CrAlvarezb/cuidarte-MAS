@@ -1,0 +1,239 @@
+# =====================================================================
+#  Pipeline de INTEGRACIÓN CONTINUA (CI) - Cuidarte+
+#  Etapas: Build -> Análisis estático de calidad -> Pruebas automatizadas
+#          (funcionales, seguridad, rendimiento) -> Quality Gate
+#
+#  Política: las etapas que detectan defectos usan continue-on-error para
+#  que TODAS las verificaciones se ejecuten y generen evidencia. La decisión
+#  de aprobar o bloquear se toma al final en el job "quality-gate".
+# =====================================================================
+name: CI - Build y Pruebas
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      enforce_gate:
+        description: "Bloquear el pipeline si el Quality Gate detecta defectos"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "22"
+
+# shell bash explícito => "set -eo pipefail" (los fallos no se ocultan tras "| tee")
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # -------------------------------------------------------------------
+  backend-build:
+    name: Backend - instalación y verificación
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: BACKEND
+    outputs:
+      syntax: ${{ steps.syntax.outcome }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: BACKEND/package-lock.json
+      - name: Instalar dependencias (reproducible con lockfile)
+        run: npm ci
+      - name: Verificación de sintaxis de todos los módulos
+        id: syntax
+        run: |
+          set -e
+          for f in $(find src -name '*.js'); do node --check "$f"; done
+          node -e "JSON.parse(require('fs').readFileSync('src/openapi.json'))"
+          echo "Sintaxis OK" >> "$GITHUB_STEP_SUMMARY"
+
+  # -------------------------------------------------------------------
+  frontend-build:
+    name: Frontend - lint y build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: FRONTEND
+    outputs:
+      lint: ${{ steps.lint.outcome }}
+      build: ${{ steps.build.outcome }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: FRONTEND/package-lock.json
+      - name: Instalar dependencias
+        run: npm ci
+      - name: Análisis estático de calidad (ESLint)
+        id: lint
+        continue-on-error: true
+        run: |
+          mkdir -p ../reports
+          npx eslint . -f json -o ../reports/eslint-frontend.json || true
+          npx eslint . | tee ../reports/eslint-frontend.txt
+      - name: Resumen ESLint
+        if: always()
+        run: |
+          node -e '
+            const r = require("../reports/eslint-frontend.json");
+            const e = r.reduce((a, f) => a + f.errorCount, 0);
+            const w = r.reduce((a, f) => a + f.warningCount, 0);
+            const files = r.filter(f => f.errorCount + f.warningCount > 0);
+            let md = `### ESLint frontend: ${e} errores, ${w} advertencias\n\n| Archivo | Errores | Advertencias |\n|---|---|---|\n`;
+            for (const f of files) md += `| ${f.filePath.split("FRONTEND/")[1]} | ${f.errorCount} | ${f.warningCount} |\n`;
+            require("fs").appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
+          '
+      - name: Build de producción (Vite)
+        id: build
+        run: npm run build
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reporte-eslint
+          path: reports/
+
+  # -------------------------------------------------------------------
+  api-tests:
+    name: Pruebas automatizadas contra stack Docker
+    runs-on: ubuntu-latest
+    needs: [backend-build, frontend-build]
+    outputs:
+      functional: ${{ steps.functional.outcome }}
+      security: ${{ steps.security.outcome }}
+      performance: ${{ steps.performance.outcome }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Levantar entorno efímero (docker compose)
+        # Se usa la configuración TAL COMO VIENE en el repositorio (.env incluido)
+        # para que las pruebas evalúen el software real, no una versión endurecida.
+        run: |
+          docker compose up -d --build
+          docker compose ps
+
+      - name: Esperar disponibilidad de la API
+        run: |
+          for i in $(seq 1 60); do
+            curl -fs http://localhost:4444/ && exit 0
+            sleep 3
+          done
+          docker compose logs
+          exit 1
+
+      - name: Pruebas funcionales
+        id: functional
+        continue-on-error: true
+        working-directory: tests
+        run: |
+          mkdir -p ../reports
+          node --test --test-reporter=spec --test-reporter-destination=stdout \
+               --test-reporter=junit --test-reporter-destination=../reports/functional.xml \
+               api/functional.test.mjs | tee ../reports/functional.txt
+
+      - name: Pruebas de seguridad (OWASP Top 10)
+        id: security
+        continue-on-error: true
+        working-directory: tests
+        run: |
+          node --test --test-reporter=spec --test-reporter-destination=stdout \
+               --test-reporter=junit --test-reporter-destination=../reports/security.xml \
+               api/security.test.mjs | tee ../reports/security.txt
+
+      - name: Pruebas no funcionales (rendimiento)
+        id: performance
+        continue-on-error: true
+        working-directory: tests
+        run: |
+          node --test --test-reporter=spec --test-reporter-destination=stdout \
+               --test-reporter=junit --test-reporter-destination=../reports/performance.xml \
+               api/performance.test.mjs | tee ../reports/performance.txt
+
+      - name: Publicar resumen de pruebas
+        if: always()
+        run: |
+          for s in functional security performance; do
+            f="reports/$s.xml"; [ -f "$f" ] || continue
+            total=$(grep -o '<testcase ' "$f" | wc -l)
+            fail=$(grep -o '<failure ' "$f" | wc -l)
+            echo "### Suite $s: $((total-fail)) / $total aprobadas, $fail fallidas" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            grep -E '✖|✔' "reports/$s.txt" | head -60 >> "$GITHUB_STEP_SUMMARY" || true
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          done
+
+      - name: Logs del backend
+        if: always()
+        run: docker compose logs cuidarteplus-backend-ev > reports/backend.log 2>&1 || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reportes-pruebas
+          path: reports/
+
+      - name: Detener entorno
+        if: always()
+        run: docker compose down -v
+
+  # -------------------------------------------------------------------
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    needs: [backend-build, frontend-build, api-tests]
+    if: always()
+    steps:
+      - name: Evaluar resultados
+        env:
+          ENFORCE: ${{ github.event_name != 'workflow_dispatch' || inputs.enforce_gate }}
+          BACKEND: ${{ needs.backend-build.result }}
+          BUILD: ${{ needs.frontend-build.outputs.build }}
+          LINT: ${{ needs.frontend-build.outputs.lint }}
+          FUNC: ${{ needs.api-tests.outputs.functional }}
+          SEC: ${{ needs.api-tests.outputs.security }}
+          PERF: ${{ needs.api-tests.outputs.performance }}
+        run: |
+          {
+            echo "## Quality Gate"
+            echo "| Control | Resultado |"
+            echo "|---|---|"
+            echo "| Build backend | $BACKEND |"
+            echo "| Build frontend | $BUILD |"
+            echo "| ESLint frontend | $LINT |"
+            echo "| Pruebas funcionales | $FUNC |"
+            echo "| Pruebas de seguridad | $SEC |"
+            echo "| Pruebas de rendimiento | $PERF |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          bad=0
+          for v in "$BACKEND" "$BUILD" "$LINT" "$FUNC" "$SEC" "$PERF"; do
+            [ "$v" = "success" ] || bad=1
+          done
+          if [ "$bad" = 1 ]; then
+            echo "::error::Quality Gate RECHAZADO: existen defectos de calidad/seguridad sin resolver."
+            if [ "$ENFORCE" = "true" ]; then exit 1; fi
+            echo "::warning::Gate en modo informativo (enforce_gate=false): se permite continuar."
+          else
+            echo "Quality Gate APROBADO" >> "$GITHUB_STEP_SUMMARY"
+          fi
