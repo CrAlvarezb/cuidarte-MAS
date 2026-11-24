@@ -1,8 +1,10 @@
-# Override para el despliegue (CD): usa las imágenes publicadas en GHCR
-# en lugar de construirlas, garantizando que se despliega exactamente
-# el artefacto que pasó por CI.
+# Override para el despliegue (CD): usa las imágenes empaquetadas por el
+# pipeline (etiquetadas con el SHA del commit) en lugar de construirlas,
+# garantizando que se despliega exactamente el artefacto verificado.
 services:
   cuidarteplus-backend-ev:
-    image: ghcr.io/${IMAGE_OWNER}/cuidarte-mas-backend:${IMAGE_TAG:-latest}
+    image: cuidarte-mas-backend:${IMAGE_TAG:?definir IMAGE_TAG}
+    pull_policy: never
   cuidarteplus-frontend-ev:
-    image: ghcr.io/${IMAGE_OWNER}/cuidarte-mas-frontend:${IMAGE_TAG:-latest}
+    image: cuidarte-mas-frontend:${IMAGE_TAG:?definir IMAGE_TAG}
+    pull_policy: never
