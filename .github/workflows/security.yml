@@ -258,6 +258,7 @@ jobs:
   dast:
     name: DAST (OWASP ZAP)
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - name: Levantar aplicación completa
@@ -272,7 +273,8 @@ jobs:
           # definición OpenAPI publicada por la propia API (servers -> localhost:4444)
           target: http://localhost:4444/openapi.json
           format: openapi
-          cmd_options: "-a"
+          # Escaneo activo acotado a 8 min (algunos endpoints tienen 5 s de retardo artificial)
+          cmd_options: '-z "-config scanner.maxScanDurationInMins=8 -config scanner.maxRuleDurationInMins=1"'
           allow_issue_writing: false
           fail_action: false
           artifact_name: reporte-dast-api

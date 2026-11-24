@@ -3,6 +3,6 @@
 # el artefacto que pasó por CI.
 services:
   cuidarteplus-backend-ev:
-    image: ghcr.io/${IMAGE_OWNER}/cuidarteplus-backend:${IMAGE_TAG:-latest}
+    image: ghcr.io/${IMAGE_OWNER}/cuidarte-mas-backend:${IMAGE_TAG:-latest}
   cuidarteplus-frontend-ev:
-    image: ghcr.io/${IMAGE_OWNER}/cuidarteplus-frontend:${IMAGE_TAG:-latest}
+    image: ghcr.io/${IMAGE_OWNER}/cuidarte-mas-frontend:${IMAGE_TAG:-latest}

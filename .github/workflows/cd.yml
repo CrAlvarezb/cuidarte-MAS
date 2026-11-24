@@ -48,20 +48,20 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build & push backend
         run: |
-          img=ghcr.io/${{ steps.meta.outputs.owner }}/cuidarteplus-backend
-          docker build -t "$img:${{ steps.meta.outputs.tag }}" -t "$img:latest" BACKEND
+          img=ghcr.io/${{ steps.meta.outputs.owner }}/cuidarte-mas-backend
+          docker build --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \n            -t "$img:${{ steps.meta.outputs.tag }}" -t "$img:latest" BACKEND
           docker push --all-tags "$img"
       - name: Build & push frontend
         run: |
-          img=ghcr.io/${{ steps.meta.outputs.owner }}/cuidarteplus-frontend
+          img=ghcr.io/${{ steps.meta.outputs.owner }}/cuidarte-mas-frontend
           docker build --build-arg VITE_API_URL=http://localhost:4444 \
             -t "$img:${{ steps.meta.outputs.tag }}" -t "$img:latest" FRONTEND
           docker push --all-tags "$img"
       - name: Resumen
         run: |
           echo "### Imágenes publicadas (tag ${{ steps.meta.outputs.tag }})" >> "$GITHUB_STEP_SUMMARY"
-          echo "- ghcr.io/${{ steps.meta.outputs.owner }}/cuidarteplus-backend:${{ steps.meta.outputs.tag }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- ghcr.io/${{ steps.meta.outputs.owner }}/cuidarteplus-frontend:${{ steps.meta.outputs.tag }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- ghcr.io/${{ steps.meta.outputs.owner }}/cuidarte-mas-backend:${{ steps.meta.outputs.tag }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- ghcr.io/${{ steps.meta.outputs.owner }}/cuidarte-mas-frontend:${{ steps.meta.outputs.tag }}" >> "$GITHUB_STEP_SUMMARY"
 
   deploy-staging:
     name: Desplegar en staging + smoke test
@@ -85,7 +85,7 @@ jobs:
         run: |
           if [ -z "$JWT_SECRET" ]; then export JWT_SECRET=$(openssl rand -hex 32); fi
           docker compose -f docker-compose.yml -f deploy/docker-compose.staging.yml pull \
-            cuidarteplus-backend-ev cuidarteplus-frontend-ev
+            cuidarte-mas-backend-ev cuidarte-mas-frontend-ev
           docker compose -f docker-compose.yml -f deploy/docker-compose.staging.yml up -d --no-build
       - name: Smoke test
         run: |
