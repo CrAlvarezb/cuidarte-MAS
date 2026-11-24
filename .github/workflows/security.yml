@@ -33,6 +33,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
 defaults:
   run:
     shell: bash
