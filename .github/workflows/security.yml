@@ -273,7 +273,7 @@ jobs:
           fail_action: false
           artifact_name: reporte-dast-api
       - name: ZAP baseline scan (frontend)
-        uses: zaproxy/action-baseline@v0.14.0
+        uses: zaproxy/action-baseline@v0.15.0
         continue-on-error: true
         with:
           target: http://localhost:3333
