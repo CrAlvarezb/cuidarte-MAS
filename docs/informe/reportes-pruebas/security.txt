@@ -1,0 +1,282 @@
+▶ A01 Broken Access Control
+  ✖ SEC-01 DELETE /usuarios/:id sin token debe responder 401 (15.202775ms)
+  ✖ SEC-02 GET /pacientes/buscar/rut/:rut sin token no debe exponer datos clínicos (5.144651ms)
+  ✖ SEC-03 POST /roles sin token debe responder 401 (7.570933ms)
+  ✖ SEC-04 PUT /roles/:id sin token debe responder 401 (6.335089ms)
+  ✖ SEC-05 GET /tipo-examen sin token debe responder 401 (4.309826ms)
+  ✖ SEC-06 Un paciente no puede crear usuarios administradores (escalamiento de privilegios) (12.755914ms)
+  ✔ SEC-07 Un paciente no puede consultar el detalle de otros usuarios (5.329143ms)
+✖ A01 Broken Access Control (66.158289ms)
+▶ A02 Cryptographic Failures / A07 Identification and Authentication Failures
+  ✖ SEC-08 Un JWT firmado con el secreto publicado en el repositorio no debe ser aceptado (6.281921ms)
+  ✖ SEC-09 El login debe limitar intentos fallidos (anti fuerza bruta) (29.614629ms)
+  ✖ SEC-10 La política de contraseñas debe rechazar claves débiles (ASVS 2.1) (4.531662ms)
+✖ A02 Cryptographic Failures / A07 Identification and Authentication Failures (40.837242ms)
+▶ A05 Security Misconfiguration
+  ✖ SEC-11 Las respuestas deben incluir cabeceras de seguridad HTTP (3.430675ms)
+  ✖ SEC-12 No debe revelarse la tecnología del servidor (X-Powered-By) (2.027056ms)
+  ✖ SEC-13 CORS no debe permitir cualquier origen (3.068885ms)
+  ✖ SEC-14 Los errores no deben exponer detalles internos de la base de datos (10.631966ms)
+✖ A05 Security Misconfiguration (19.514715ms)
+▶ A09 Security Logging and Monitoring Failures
+  ✖ SEC-15 Operaciones administrativas deben quedar auditadas sin error (POST /roles con admin) (21.379712ms)
+✖ A09 Security Logging and Monitoring Failures (21.594256ms)
+ℹ tests 15
+ℹ suites 4
+ℹ pass 1
+ℹ fail 14
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 223.647425
+
+✖ failing tests:
+
+test at api/security.test.mjs:26:3
+✖ SEC-01 DELETE /usuarios/:id sin token debe responder 401 (15.202775ms)
+  AssertionError [ERR_ASSERTION]: Se eliminó el usuario 5 sin autenticación (HTTP 200)
+  
+  200 !== 401
+  
+      at TestContext.<anonymous> (file:///home/runner/work/cuidarte-MAS/cuidarte-MAS/tests/api/security.test.mjs:29:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1442:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 401,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at api/security.test.mjs:32:3
+✖ SEC-02 GET /pacientes/buscar/rut/:rut sin token no debe exponer datos clínicos (5.144651ms)
+  AssertionError [ERR_ASSERTION]: Ficha clínica expuesta sin autenticación: {"id":"1","rut":"11111111-1","primer_nombre":"Juan","apellido_paterno":"Pérez","apellido_materno":"Gómez","fecha_nacimie...
+  
+  200 !== 401
+  
+      at TestContext.<anonymous> (file:///home/runner/work/cuidarte-MAS/cuidarte-MAS/tests/api/security.test.mjs:34:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 401,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at api/security.test.mjs:37:3
+✖ SEC-03 POST /roles sin token debe responder 401 (7.570933ms)
+  AssertionError [ERR_ASSERTION]: Se aceptó creación de rol sin autenticación (HTTP 201)
+      at TestContext.<anonymous> (file:///home/runner/work/cuidarte-MAS/cuidarte-MAS/tests/api/security.test.mjs:39:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at api/security.test.mjs:42:3
+✖ SEC-04 PUT /roles/:id sin token debe responder 401 (6.335089ms)
+  AssertionError [ERR_ASSERTION]: Endpoint de modificación de roles sin control de acceso (HTTP 200)
+      at TestContext.<anonymous> (file:///home/runner/work/cuidarte-MAS/cuidarte-MAS/tests/api/security.test.mjs:45:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at api/security.test.mjs:48:3
+✖ SEC-05 GET /tipo-examen sin token debe responder 401 (4.309826ms)
+  AssertionError [ERR_ASSERTION]: Catálogo accesible sin autenticación (HTTP 200)
+  
+  200 !== 401
+  
+      at TestContext.<anonymous> (file:///home/runner/work/cuidarte-MAS/cuidarte-MAS/tests/api/security.test.mjs:50:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 401,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at api/security.test.mjs:53:3
+✖ SEC-06 Un paciente no puede crear usuarios administradores (escalamiento de privilegios) (12.755914ms)
+  AssertionError [ERR_ASSERTION]: Paciente creó un usuario con rol admin (HTTP 201)
+  
+  201 !== 403
+  
+      at TestContext.<anonymous> (file:///home/runner/work/cuidarte-MAS/cuidarte-MAS/tests/api/security.test.mjs:59:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 201,
+    expected: 403,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at api/security.test.mjs:69:3
+✖ SEC-08 Un JWT firmado con el secreto publicado en el repositorio no debe ser aceptado (6.281921ms)
+  AssertionError [ERR_ASSERTION]: Token forjado con secreto expuesto permitió listar todos los usuarios como admin
+      at TestContext.<anonymous> (file:///home/runner/work/cuidarte-MAS/cuidarte-MAS/tests/api/security.test.mjs:72:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1442:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 200,
+    expected: 200,
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }
+
+test at api/security.test.mjs:75:3
+✖ SEC-09 El login debe limitar intentos fallidos (anti fuerza bruta) (29.614629ms)
+  AssertionError [ERR_ASSERTION]: 15 intentos fallidos consecutivos sin bloqueo ni rate limiting (HTTP 429)
+      at TestContext.<anonymous> (file:///home/runner/work/cuidarte-MAS/cuidarte-MAS/tests/api/security.test.mjs:86:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at api/security.test.mjs:89:3
+✖ SEC-10 La política de contraseñas debe rechazar claves débiles (ASVS 2.1) (4.531662ms)
+  AssertionError [ERR_ASSERTION]: Se aceptó la contraseña '123456'
+  
+  201 !== 400
+  
+      at TestContext.<anonymous> (file:///home/runner/work/cuidarte-MAS/cuidarte-MAS/tests/api/security.test.mjs:94:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 201,
+    expected: 400,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at api/security.test.mjs:99:3
+✖ SEC-11 Las respuestas deben incluir cabeceras de seguridad HTTP (3.430675ms)
+  AssertionError [ERR_ASSERTION]: Faltan cabeceras: x-content-type-options, x-frame-options, strict-transport-security, content-security-policy
+  + actual - expected
+  
+  + [
+  +   'x-content-type-options',
+  +   'x-frame-options',
+  +   'strict-transport-security',
+  +   'content-security-policy'
+  + ]
+  - []
+  
+      at TestContext.<anonymous> (file:///home/runner/work/cuidarte-MAS/cuidarte-MAS/tests/api/security.test.mjs:103:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1442:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ 'x-content-type-options', 'x-frame-options', 'strict-transport-security', 'content-security-policy' ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at api/security.test.mjs:106:3
+✖ SEC-12 No debe revelarse la tecnología del servidor (X-Powered-By) (2.027056ms)
+  AssertionError [ERR_ASSERTION]: Cabecera expuesta: X-Powered-By: Express
+  
+  'Express' !== null
+  
+      at TestContext.<anonymous> (file:///home/runner/work/cuidarte-MAS/cuidarte-MAS/tests/api/security.test.mjs:108:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 'Express',
+    expected: null,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at api/security.test.mjs:111:3
+✖ SEC-13 CORS no debe permitir cualquier origen (3.068885ms)
+  AssertionError [ERR_ASSERTION]: CORS permite cualquier origen (*)
+      at TestContext.<anonymous> (file:///home/runner/work/cuidarte-MAS/cuidarte-MAS/tests/api/security.test.mjs:113:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '*',
+    expected: '*',
+    operator: 'notStrictEqual',
+    diff: 'simple'
+  }
+
+test at api/security.test.mjs:116:3
+✖ SEC-14 Los errores no deben exponer detalles internos de la base de datos (10.631966ms)
+  AssertionError [ERR_ASSERTION]: Mensaje interno expuesto: {"error":"Error al obtener paciente","glosa":"invalid input syntax for type bigint: \"abc\""}
+      at TestContext.<anonymous> (file:///home/runner/work/cuidarte-MAS/cuidarte-MAS/tests/api/security.test.mjs:118:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: '{"error":"Error al obtener paciente","glosa":"invalid input syntax for type bigint: \\"abc\\""}',
+    expected: /invalid input syntax|bigint|syntax error|pg_|stack/i,
+    operator: 'doesNotMatch',
+    diff: 'simple'
+  }
+
+test at api/security.test.mjs:123:3
+✖ SEC-15 Operaciones administrativas deben quedar auditadas sin error (POST /roles con admin) (21.379712ms)
+  AssertionError [ERR_ASSERTION]: La operación falló al registrar auditoría (HTTP 500): {"error":"Error al crear rol","glosa":"invalid input syntax for type bigint: \"admin\""}
+  
+  500 !== 201
+  
+      at TestContext.<anonymous> (file:///home/runner/work/cuidarte-MAS/cuidarte-MAS/tests/api/security.test.mjs:128:12)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Promise.all (index 0)
+      at async Suite.run (node:internal/test_runner/test:1442:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: 500,
+    expected: 201,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

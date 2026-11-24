@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="CP-F01 Disponibilidad del servicio" time="0.020817" disabled="0" errors="0" tests="2" failures="0" skipped="0" hostname="runnervm0hi8g">
+		<testcase name="GET / responde estado ok" time="0.004761" classname="test"/>
+		<testcase name="La especificación OpenAPI está publicada" time="0.003692" classname="test"/>
+	</testsuite>
+	<testsuite name="CP-F02 Autenticación" time="0.085108" disabled="0" errors="0" tests="6" failures="0" skipped="0" hostname="runnervm0hi8g">
+		<testcase name="Login exitoso del usuario semilla 'admin' entrega un JWT" time="0.060307" classname="test"/>
+		<testcase name="Login exitoso del usuario semilla 'medico' entrega un JWT" time="0.007588" classname="test"/>
+		<testcase name="Login exitoso del usuario semilla 'paciente' entrega un JWT" time="0.005582" classname="test"/>
+		<testcase name="Login con contraseña incorrecta responde 401" time="0.003172" classname="test"/>
+		<testcase name="Login con usuario inexistente responde 401" time="0.003275" classname="test"/>
+		<testcase name="Login sin datos obligatorios responde 400 (validación)" time="0.004528" classname="test"/>
+	</testsuite>
+	<testsuite name="CP-F03 Registro de pacientes (autoregistro)" time="0.017438" disabled="0" errors="0" tests="4" failures="0" skipped="0" hostname="runnervm0hi8g">
+		<testcase name="Registro válido crea el usuario (201)" time="0.006945" classname="test"/>
+		<testcase name="Registro con correo inválido responde 400" time="0.003173" classname="test"/>
+		<testcase name="Registro con contraseña corta responde 400" time="0.002809" classname="test"/>
+		<testcase name="Registro con usuario duplicado responde 400" time="0.004236" classname="test"/>
+	</testsuite>
+	<testsuite name="CP-F04 Gestión de pacientes y control de acceso por rol" time="15.036117" disabled="0" errors="0" tests="7" failures="0" skipped="0" hostname="runnervm0hi8g">
+		<testcase name="Médico puede listar pacientes" time="5.007712" classname="test"/>
+		<testcase name="Paciente NO puede listar todos los pacientes (403)" time="5.005963" classname="test"/>
+		<testcase name="Listar pacientes sin token responde 401" time="5.003180" classname="test"/>
+		<testcase name="Paciente puede ver su propia ficha (id 1)" time="0.007738" classname="test"/>
+		<testcase name="Paciente NO puede ver la ficha de otro paciente (id 2)" time="0.002890" classname="test"/>
+		<testcase name="Médico crea un paciente con datos válidos (201)" time="0.005622" classname="test"/>
+		<testcase name="Crear paciente con RUT inválido responde 400" time="0.002566" classname="test"/>
+	</testsuite>
+	<testsuite name="CP-F05 Exámenes y auditoría" time="0.018631" disabled="0" errors="0" tests="5" failures="0" skipped="0" hostname="runnervm0hi8g">
+		<testcase name="Médico lista tipos de examen" time="0.003954" classname="test"/>
+		<testcase name="Paciente consulta sus propios exámenes" time="0.006572" classname="test"/>
+		<testcase name="Paciente NO consulta exámenes de otro paciente (403)" time="0.002693" classname="test"/>
+		<testcase name="Administrador consulta el registro de auditoría" time="0.002809" classname="test"/>
+		<testcase name="Paciente NO consulta el registro de auditoría (403)" time="0.002371" classname="test"/>
+	</testsuite>
+	<!-- tests 24 -->
+	<!-- suites 5 -->
+	<!-- pass 24 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 15256.26611 -->
+</testsuites>

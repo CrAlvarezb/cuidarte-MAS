@@ -1,0 +1,43 @@
+CUIDARTE MAS - EVALUACIÓN PARCIAL N°5 (ISY1102)
+Integración CI/CD y DevSecOps - Informe y hallazgos
+Repositorio: https://github.com/CrAlvarezb/cuidarte-MAS
+====================================================================
+
+01 Informe tecnico
+   Informe_Tecnico_EP5_CuidarteMAS.docx / .pdf
+   -> Documento a entregar en AVA. Completar en la portada los campos
+      marcados en amarillo (integrantes, carrera, sección, docente).
+
+02 Hallazgos
+   Hallazgos_Cuidarte_MAS.pdf  -> 22 hallazgos (H-01 a H-22) con ubicación,
+                                  OWASP, severidad y mitigación propuesta.
+   HALLAZGOS.md                -> misma información en texto (repositorio).
+
+03 Reportes de seguridad (salida original de cada herramienta en GitHub Actions)
+   01 Secretos - Gitleaks       gitleaks.json        3 secretos (JWT en .env, BACKEND/.env, README)
+   02 SAST - Semgrep y CodeQL   semgrep.json/.sarif  42 hallazgos (5 en código de la app)
+                                codeql-alertas.json  32 alertas CodeQL + 42 Semgrep (Code Scanning)
+   03 SCA - Dependencias        npm-audit-*.json     backend 10 (1 crítica) / frontend 24 (17 altas)
+                                trivy-fs.json/.sarif
+   04 IaC - Trivy config        trivy-config.*       4 (contenedores root, sin HEALTHCHECK)
+   05 Imagenes Docker - Trivy   trivy-image-*.json   backend 4 críticas / 46 altas
+   06 DAST - OWASP ZAP          zap-api-*.html       API: 9 tipos de alerta, 113 reglas OK
+                                zap-web-github.html  frontend (baseline)
+   (Los .html se abren con el navegador; los .json/.sarif son la evidencia cruda.)
+
+04 Reportes de pruebas (pipeline CI)
+   functional.*   24/24 aprobadas
+   security.*     15 casos, 14 fallan = vulnerabilidades confirmadas (OWASP Top 10)
+   performance.*  6 casos, 2 fallan (GET /pacientes y /examenes ~5 s)
+   eslint-frontend.*  13 errores, 3 advertencias
+   (.txt = salida legible, .xml = formato JUnit)
+
+05 Capturas
+   Evidencias usadas en el informe: diagramas, ejecuciones CI / Security / CD
+   en GitHub Actions, terminal de pruebas, ZAP, Dependabot.
+
+06 Pipeline CI-CD
+   PIPELINE.md + ci.yml, security.yml, cd.yml (definición de los pipelines).
+
+Nota: el código de la aplicación NO fue modificado; los hallazgos corresponden
+al código original entregado (primer commit del repositorio).

@@ -1,0 +1,42 @@
+▶ CP-F01 Disponibilidad del servicio
+  ✔ GET / responde estado ok (4.760901ms)
+  ✔ La especificación OpenAPI está publicada (3.692352ms)
+✔ CP-F01 Disponibilidad del servicio (20.817079ms)
+▶ CP-F02 Autenticación
+  ✔ Login exitoso del usuario semilla 'admin' entrega un JWT (60.307297ms)
+  ✔ Login exitoso del usuario semilla 'medico' entrega un JWT (7.587552ms)
+  ✔ Login exitoso del usuario semilla 'paciente' entrega un JWT (5.582327ms)
+  ✔ Login con contraseña incorrecta responde 401 (3.171647ms)
+  ✔ Login con usuario inexistente responde 401 (3.275219ms)
+  ✔ Login sin datos obligatorios responde 400 (validación) (4.527824ms)
+✔ CP-F02 Autenticación (85.107551ms)
+▶ CP-F03 Registro de pacientes (autoregistro)
+  ✔ Registro válido crea el usuario (201) (6.944978ms)
+  ✔ Registro con correo inválido responde 400 (3.173274ms)
+  ✔ Registro con contraseña corta responde 400 (2.808514ms)
+  ✔ Registro con usuario duplicado responde 400 (4.236045ms)
+✔ CP-F03 Registro de pacientes (autoregistro) (17.437636ms)
+▶ CP-F04 Gestión de pacientes y control de acceso por rol
+  ✔ Médico puede listar pacientes (5007.711554ms)
+  ✔ Paciente NO puede listar todos los pacientes (403) (5005.963034ms)
+  ✔ Listar pacientes sin token responde 401 (5003.180421ms)
+  ✔ Paciente puede ver su propia ficha (id 1) (7.738108ms)
+  ✔ Paciente NO puede ver la ficha de otro paciente (id 2) (2.889722ms)
+  ✔ Médico crea un paciente con datos válidos (201) (5.621602ms)
+  ✔ Crear paciente con RUT inválido responde 400 (2.566487ms)
+✔ CP-F04 Gestión de pacientes y control de acceso por rol (15036.116763ms)
+▶ CP-F05 Exámenes y auditoría
+  ✔ Médico lista tipos de examen (3.953607ms)
+  ✔ Paciente consulta sus propios exámenes (6.571691ms)
+  ✔ Paciente NO consulta exámenes de otro paciente (403) (2.693394ms)
+  ✔ Administrador consulta el registro de auditoría (2.809234ms)
+  ✔ Paciente NO consulta el registro de auditoría (403) (2.37068ms)
+✔ CP-F05 Exámenes y auditoría (18.631248ms)
+ℹ tests 24
+ℹ suites 5
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 15256.26611

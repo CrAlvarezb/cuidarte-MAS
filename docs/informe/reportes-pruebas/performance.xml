@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testsuite name="NF-01 Tiempo de respuesta de la API" time="30.112504" disabled="0" errors="0" tests="6" failures="2" skipped="0" hostname="runnervm0hi8g">
+		<testcase name="GET / p95 &lt; 2000 ms" time="0.009733" classname="test"/>
+		<testcase name="GET /tipo-examen p95 &lt; 2000 ms" time="0.035723" classname="test"/>
+		<testcase name="GET /pacientes p95 &lt; 2000 ms" time="15.019030" classname="test" failure="p95 = 5007 ms (umbral 2000 ms)">
+			<failure type="testCodeFailure" message="p95 = 5007 ms (umbral 2000 ms)">
+[Error [ERR_TEST_FAILURE]: p95 = 5007 ms (umbral 2000 ms)] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: p95 = 5007 ms (umbral 2000 ms)
+      at TestContext.&lt;anonymous> (file:///home/runner/work/cuidarte-MAS/cuidarte-MAS/tests/api/performance.test.mjs:40:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+			</failure>
+		</testcase>
+		<testcase name="GET /pacientes/1 p95 &lt; 2000 ms" time="0.010480" classname="test"/>
+		<testcase name="GET /examenes p95 &lt; 2000 ms" time="15.015170" classname="test" failure="p95 = 5005 ms (umbral 2000 ms)">
+			<failure type="testCodeFailure" message="p95 = 5005 ms (umbral 2000 ms)">
+[Error [ERR_TEST_FAILURE]: p95 = 5005 ms (umbral 2000 ms)] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: p95 = 5005 ms (umbral 2000 ms)
+      at TestContext.&lt;anonymous> (file:///home/runner/work/cuidarte-MAS/cuidarte-MAS/tests/api/performance.test.mjs:40:14)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Suite.processPendingSubtests (node:internal/test_runner/test:744:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+			</failure>
+		</testcase>
+		<testcase name="GET /auditoria p95 &lt; 2000 ms" time="0.013395" classname="test"/>
+	</testsuite>
+	<!-- tests 6 -->
+	<!-- suites 1 -->
+	<!-- pass 4 -->
+	<!-- fail 2 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 30186.687481 -->
+</testsuites>
