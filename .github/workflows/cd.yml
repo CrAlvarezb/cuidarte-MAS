@@ -49,12 +49,14 @@ jobs:
       - name: Build & push backend
         run: |
           img=ghcr.io/${{ steps.meta.outputs.owner }}/cuidarte-mas-backend
-          docker build --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \n            -t "$img:${{ steps.meta.outputs.tag }}" -t "$img:latest" BACKEND
+          docker build --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
+            -t "$img:${{ steps.meta.outputs.tag }}" -t "$img:latest" BACKEND
           docker push --all-tags "$img"
       - name: Build & push frontend
         run: |
           img=ghcr.io/${{ steps.meta.outputs.owner }}/cuidarte-mas-frontend
           docker build --build-arg VITE_API_URL=http://localhost:4444 \
+            --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
             -t "$img:${{ steps.meta.outputs.tag }}" -t "$img:latest" FRONTEND
           docker push --all-tags "$img"
       - name: Resumen
