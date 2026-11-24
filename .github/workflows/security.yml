@@ -68,7 +68,7 @@ jobs:
             echo "|---|---|---|"
             jq -r '.[] | "| \(.RuleID) | \(.File) | \(.StartLine) |"' reports/gitleaks.json
           } >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: reporte-secretos
@@ -112,7 +112,7 @@ jobs:
         with:
           sarif_file: reports/semgrep.sarif
           category: semgrep
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: reporte-sast-semgrep
@@ -182,7 +182,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           echo "critical=$crit" >> "$GITHUB_OUTPUT"
           echo "high=$high" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: reporte-sca
@@ -212,7 +212,7 @@ jobs:
             echo "|---|---|---|---|"
             jq -r '.Results[]? | .Target as $t | .Misconfigurations[]? | "| \(.Severity) | \(.ID) | \($t) | \(.Title) |"' reports/trivy-config.json
           } >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: reporte-iac
@@ -244,7 +244,7 @@ jobs:
             jq -r '[.Results[]?.Vulnerabilities[]?] | group_by(.Severity) | map("- \(.[0].Severity): \(length)") | .[]' \
               "reports/trivy-image-${{ matrix.component }}.json"
           } >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: reporte-imagen-${{ matrix.component }}
