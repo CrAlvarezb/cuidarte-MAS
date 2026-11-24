@@ -53,7 +53,7 @@ jobs:
     outputs:
       findings: ${{ steps.scan.outputs.findings }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # analiza todo el historial git
       - name: Gitleaks
@@ -90,7 +90,7 @@ jobs:
     outputs:
       findings: ${{ steps.scan.outputs.findings }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Semgrep (OWASP Top 10, Node.js, React, secretos)
         id: scan
         run: |
@@ -131,7 +131,7 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: github/codeql-action/init@v3
         with:
           languages: javascript-typescript
@@ -148,7 +148,7 @@ jobs:
       critical: ${{ steps.summary.outputs.critical }}
       high: ${{ steps.summary.outputs.high }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -199,7 +199,7 @@ jobs:
     outputs:
       findings: ${{ steps.scan.outputs.findings }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Escanear Dockerfiles y docker-compose
         id: scan
         run: |
@@ -231,7 +231,7 @@ jobs:
       matrix:
         component: [BACKEND, FRONTEND]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Construir imagen
         run: |
           name=$(echo "${{ matrix.component }}" | tr 'A-Z' 'a-z')
@@ -260,7 +260,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Levantar aplicación completa
         run: |
           docker compose up -d --build

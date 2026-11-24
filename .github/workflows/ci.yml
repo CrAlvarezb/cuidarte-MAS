@@ -48,7 +48,7 @@ jobs:
     outputs:
       syntax: ${{ steps.syntax.outcome }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -76,7 +76,7 @@ jobs:
       lint: ${{ steps.lint.outcome }}
       build: ${{ steps.build.outcome }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -122,7 +122,7 @@ jobs:
       security: ${{ steps.security.outcome }}
       performance: ${{ steps.performance.outcome }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
