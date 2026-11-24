@@ -12,8 +12,10 @@ name: CI - Build y Pruebas
 on:
   push:
     branches: [main, develop]
+    paths-ignore: ["docs/**", "**/*.md"]
   pull_request:
     branches: [main]
+    paths-ignore: ["docs/**", "**/*.md"]
   workflow_dispatch:
     inputs:
       enforce_gate:

@@ -11,7 +11,7 @@ GitHub Actions y en el resumen de cada ejecución.
 |---|---|
 | `.github/workflows/ci.yml` | Integración continua: build, análisis estático (ESLint), pruebas funcionales, de seguridad y de rendimiento, y Quality Gate |
 | `.github/workflows/security.yml` | Pruebas de seguridad automatizadas (DevSecOps): Gitleaks, Semgrep, CodeQL, npm audit, Trivy, OWASP ZAP y Security Gate |
-| `.github/workflows/cd.yml` | Entrega continua: publica imágenes en GHCR y despliega en staging con smoke test |
+| `.github/workflows/cd.yml` | Entrega continua: empaqueta imágenes etiquetadas con el SHA del commit (artefacto con checksum SHA-256) y despliega en staging con smoke test |
 | `.github/dependabot.yml` | Mantenimiento: actualizaciones semanales de dependencias, imágenes base y acciones |
 | `.gitleaks.toml` | Configuración del escáner de secretos |
 | `deploy/docker-compose.staging.yml` | Override para desplegar las imágenes publicadas (sin reconstruirlas) |
@@ -54,7 +54,7 @@ flowchart LR
 
     subgraph CD["CD - Entrega continua (cd.yml)"]
         direction TB
-        PK[Build & push imágenes<br/>GHCR tag = SHA] --> APR[Environment staging<br/>aprobación manual]
+        PK[Empaquetar imágenes<br/>tag = SHA + checksum] --> APR[Environment staging<br/>aprobación manual]
         APR --> DEPL[Deploy docker compose] --> SMK[Smoke test<br/>API + web + login]
         SMK -- falla --> RB[Rollback]
     end

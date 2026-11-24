@@ -19,8 +19,10 @@ name: Security - DevSecOps
 on:
   push:
     branches: [main, develop]
+    paths-ignore: ["docs/**", "**/*.md"]
   pull_request:
     branches: [main]
+    paths-ignore: ["docs/**", "**/*.md"]
   schedule:
     - cron: "0 6 * * 1" # lunes 06:00 UTC
   workflow_dispatch:
