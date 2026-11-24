@@ -5,8 +5,7 @@ Repositorio: https://github.com/CrAlvarezb/cuidarte-MAS
 
 01 Informe tecnico
    Informe_Tecnico_EP5_CuidarteMAS.docx / .pdf
-   -> Documento a entregar en AVA. Completar en la portada los campos
-      marcados en amarillo (integrantes, carrera, sección, docente).
+   -> Documento a entregar en AVA. Portada completa: integrantes, carrera y docente.
 
 02 Hallazgos
    Hallazgos_Cuidarte_MAS.pdf  -> 22 hallazgos (H-01 a H-22) con ubicación,
