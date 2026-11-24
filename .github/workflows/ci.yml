@@ -176,8 +176,9 @@ jobs:
         run: |
           for s in functional security performance; do
             f="reports/$s.xml"; [ -f "$f" ] || continue
-            total=$(grep -o '<testcase ' "$f" | wc -l)
-            fail=$(grep -o '<failure ' "$f" | wc -l)
+            # "|| true": grep devuelve 1 si no hay coincidencias (p.ej. 0 fallas) y pipefail cortaría el paso
+            total=$({ grep -o '<testcase ' "$f" || true; } | wc -l)
+            fail=$({ grep -o '<failure ' "$f" || true; } | wc -l)
             echo "### Suite $s: $((total-fail)) / $total aprobadas, $fail fallidas" >> "$GITHUB_STEP_SUMMARY"
             echo '```' >> "$GITHUB_STEP_SUMMARY"
             grep -E '✖|✔' "reports/$s.txt" | head -60 >> "$GITHUB_STEP_SUMMARY" || true
