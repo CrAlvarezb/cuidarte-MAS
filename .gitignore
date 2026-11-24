@@ -1,2 +1,5 @@
 BACKEND/node_modules
 FRONTEND/node_modules
+# Reportes generados localmente por pruebas/escáneres
+reports/
+FRONTEND/dist

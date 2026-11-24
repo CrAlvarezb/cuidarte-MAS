@@ -1,0 +1,106 @@
+# =====================================================================
+#  Pipeline de ENTREGA CONTINUA (CD) - Cuidarte+
+#  Se ejecuta SOLO si el pipeline de CI terminó con éxito en main
+#  (es decir, si el Quality Gate aprobó). Etapas:
+#   1. Empaquetado: construye y publica imágenes Docker en GHCR,
+#      etiquetadas con el SHA del commit (trazabilidad / rollback).
+#   2. Despliegue a staging: environment "staging" (puede exigir
+#      aprobación manual en Settings > Environments) + smoke test.
+# =====================================================================
+name: CD - Entrega continua
+
+on:
+  workflow_run:
+    workflows: ["CI - Build y Pruebas"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  package:
+    name: Empaquetar y publicar imágenes
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+      owner: ${{ steps.meta.outputs.owner }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - name: Metadatos
+        id: meta
+        run: |
+          echo "tag=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          echo "owner=$(echo '${{ github.repository_owner }}' | tr 'A-Z' 'a-z')" >> "$GITHUB_OUTPUT"
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build & push backend
+        run: |
+          img=ghcr.io/${{ steps.meta.outputs.owner }}/cuidarteplus-backend
+          docker build -t "$img:${{ steps.meta.outputs.tag }}" -t "$img:latest" BACKEND
+          docker push --all-tags "$img"
+      - name: Build & push frontend
+        run: |
+          img=ghcr.io/${{ steps.meta.outputs.owner }}/cuidarteplus-frontend
+          docker build --build-arg VITE_API_URL=http://localhost:4444 \
+            -t "$img:${{ steps.meta.outputs.tag }}" -t "$img:latest" FRONTEND
+          docker push --all-tags "$img"
+      - name: Resumen
+        run: |
+          echo "### Imágenes publicadas (tag ${{ steps.meta.outputs.tag }})" >> "$GITHUB_STEP_SUMMARY"
+          echo "- ghcr.io/${{ steps.meta.outputs.owner }}/cuidarteplus-backend:${{ steps.meta.outputs.tag }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- ghcr.io/${{ steps.meta.outputs.owner }}/cuidarteplus-frontend:${{ steps.meta.outputs.tag }}" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-staging:
+    name: Desplegar en staging + smoke test
+    runs-on: ubuntu-latest
+    needs: package
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Desplegar imágenes publicadas (sin reconstruir)
+        env:
+          IMAGE_OWNER: ${{ needs.package.outputs.owner }}
+          IMAGE_TAG: ${{ needs.package.outputs.tag }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        run: |
+          if [ -z "$JWT_SECRET" ]; then export JWT_SECRET=$(openssl rand -hex 32); fi
+          docker compose -f docker-compose.yml -f deploy/docker-compose.staging.yml pull \
+            cuidarteplus-backend-ev cuidarteplus-frontend-ev
+          docker compose -f docker-compose.yml -f deploy/docker-compose.staging.yml up -d --no-build
+      - name: Smoke test
+        run: |
+          for i in $(seq 1 60); do curl -fs http://localhost:4444/ && break; sleep 3; done
+          curl -fs http://localhost:4444/ | grep -q '"status":"ok"'
+          curl -fs http://localhost:3333/ | grep -qi '<div id="root"'
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:4444/autenticacion/login \
+                 -H 'Content-Type: application/json' -d '{"nombre_usuario":"admin","password":"admin"}')
+          [ "$code" = "200" ]
+          echo "Smoke test OK (API, frontend y login)" >> "$GITHUB_STEP_SUMMARY"
+      - name: Rollback ante fallo
+        if: failure()
+        run: |
+          echo "::error::Smoke test fallido: se detiene el despliegue (rollback a la versión anterior)."
+          docker compose -f docker-compose.yml -f deploy/docker-compose.staging.yml logs || true
+      - name: Detener entorno
+        if: always()
+        run: docker compose down -v

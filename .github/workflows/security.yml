@@ -1,0 +1,318 @@
+# =====================================================================
+#  Pipeline de PRUEBAS DE SEGURIDAD (DevSecOps) - Cuidarte+
+#
+#  | Enfoque                    | Herramienta            | Detecta                                  |
+#  |----------------------------|------------------------|------------------------------------------|
+#  | Secret scanning            | Gitleaks               | Credenciales/llaves en código e historial|
+#  | SAST                       | Semgrep, CodeQL        | Vulnerabilidades en el código fuente     |
+#  | SCA (dependencias)         | npm audit, Trivy fs    | CVEs en librerías de terceros            |
+#  | IaC / configuración        | Trivy config           | Dockerfile/compose inseguros             |
+#  | Escaneo de contenedores    | Trivy image            | CVEs en imágenes Docker                  |
+#  | DAST                       | OWASP ZAP (API + web)  | Vulnerabilidades en ejecución            |
+#
+#  Todos los escaneos generan reportes (artefactos + SARIF) y el job
+#  "security-gate" resume y decide. Se ejecuta en cada push/PR y
+#  semanalmente (mantenimiento: detectar nuevas CVE sin cambios de código).
+# =====================================================================
+name: Security - DevSecOps
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1" # lunes 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      enforce_gate:
+        description: "Bloquear si hay hallazgos críticos/altos"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  TRIVY_IMAGE: aquasec/trivy:0.58.1
+  GITLEAKS_VERSION: "8.21.2"
+
+jobs:
+  # -------------------------------------------------------------------
+  secrets:
+    name: Secret scanning (Gitleaks)
+    runs-on: ubuntu-latest
+    outputs:
+      findings: ${{ steps.scan.outputs.findings }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # analiza todo el historial git
+      - name: Gitleaks
+        id: scan
+        run: |
+          mkdir -p reports
+          curl -sSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+            | tar -xz -C /tmp gitleaks
+          /tmp/gitleaks detect --source . --redact --exit-code 0 \
+            --report-format json --report-path reports/gitleaks.json
+          n=$(jq length reports/gitleaks.json)
+          echo "findings=$n" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Gitleaks: $n secretos detectados"
+            echo "| Regla | Archivo | Línea |"
+            echo "|---|---|---|"
+            jq -r '.[] | "| \(.RuleID) | \(.File) | \(.StartLine) |"' reports/gitleaks.json
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reporte-secretos
+          path: reports/
+
+  # -------------------------------------------------------------------
+  sast-semgrep:
+    name: SAST (Semgrep)
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep:1.99.0
+    permissions:
+      contents: read
+      security-events: write
+    outputs:
+      findings: ${{ steps.scan.outputs.findings }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Semgrep (OWASP Top 10, Node.js, React, secretos)
+        id: scan
+        run: |
+          mkdir -p reports
+          semgrep scan --metrics=off \
+            --config p/owasp-top-ten --config p/nodejsscan --config p/expressjs \
+            --config p/react --config p/jwt --config p/secrets --config p/dockerfile \
+            --exclude node_modules --exclude tests \
+            --sarif-output=reports/semgrep.sarif \
+            --json-output=reports/semgrep.json || true
+          n=$(python3 -c "import json;print(len(json.load(open('reports/semgrep.json'))['results']))")
+          echo "findings=$n" >> "$GITHUB_OUTPUT"
+          python3 - <<'EOF' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          r = json.load(open("reports/semgrep.json"))["results"]
+          print(f"### Semgrep: {len(r)} hallazgos\n\n| Severidad | Regla | Archivo:línea |\n|---|---|---|")
+          for x in r:
+              print(f"| {x['extra']['severity']} | {x['check_id'].split('.')[-1]} | {x['path']}:{x['start']['line']} |")
+          EOF
+      - name: Subir SARIF a GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        continue-on-error: true # requiere repo público o GitHub Advanced Security
+        with:
+          sarif_file: reports/semgrep.sarif
+          category: semgrep
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reporte-sast-semgrep
+          path: reports/
+
+  # -------------------------------------------------------------------
+  sast-codeql:
+    name: SAST (CodeQL)
+    runs-on: ubuntu-latest
+    continue-on-error: true # requiere repo público o GitHub Advanced Security
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-extended
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: codeql
+
+  # -------------------------------------------------------------------
+  sca:
+    name: SCA - dependencias (npm audit + Trivy)
+    runs-on: ubuntu-latest
+    outputs:
+      critical: ${{ steps.summary.outputs.critical }}
+      high: ${{ steps.summary.outputs.high }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: npm audit backend y frontend
+        run: |
+          mkdir -p reports
+          (cd BACKEND && npm audit --json > ../reports/npm-audit-backend.json) || true
+          (cd FRONTEND && npm audit --json > ../reports/npm-audit-frontend.json) || true
+      - name: Trivy filesystem (vulnerabilidades + secretos + licencias)
+        run: |
+          docker run --rm -v "$PWD:/src" "$TRIVY_IMAGE" fs /src \
+            --scanners vuln,secret,license --skip-dirs /src/tests \
+            --format json --output /src/reports/trivy-fs.json --exit-code 0
+          docker run --rm -v "$PWD:/src" "$TRIVY_IMAGE" fs /src \
+            --scanners vuln --format sarif --output /src/reports/trivy-fs.sarif --exit-code 0
+      - name: Resumen
+        id: summary
+        run: |
+          crit=0; high=0
+          {
+            echo "### SCA - npm audit"
+            echo "| Proyecto | Crítica | Alta | Moderada | Baja |"
+            echo "|---|---|---|---|---|"
+            for p in backend frontend; do
+              m=$(jq '.metadata.vulnerabilities' reports/npm-audit-$p.json)
+              c=$(echo "$m" | jq .critical); h=$(echo "$m" | jq .high)
+              crit=$((crit+c)); high=$((high+h))
+              echo "| $p | $c | $h | $(echo "$m" | jq .moderate) | $(echo "$m" | jq .low) |"
+            done
+            echo
+            echo "### Paquetes vulnerables (npm audit)"
+            for p in backend frontend; do
+              jq -r --arg p "$p" '.vulnerabilities | to_entries[] | "- **\($p)** `\(.key)` → \(.value.severity) (fix: \(.value.fixAvailable != false))"' reports/npm-audit-$p.json
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "critical=$crit" >> "$GITHUB_OUTPUT"
+          echo "high=$high" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reporte-sca
+          path: reports/
+
+  # -------------------------------------------------------------------
+  iac:
+    name: IaC / configuración (Trivy config)
+    runs-on: ubuntu-latest
+    outputs:
+      findings: ${{ steps.scan.outputs.findings }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Escanear Dockerfiles y docker-compose
+        id: scan
+        run: |
+          mkdir -p reports
+          docker run --rm -v "$PWD:/src" "$TRIVY_IMAGE" config /src \
+            --format json --output /src/reports/trivy-config.json --exit-code 0
+          docker run --rm -v "$PWD:/src" "$TRIVY_IMAGE" config /src \
+            --format table --exit-code 0 | tee reports/trivy-config.txt
+          n=$(jq '[.Results[]?.Misconfigurations[]?] | length' reports/trivy-config.json)
+          echo "findings=$n" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Trivy config: $n malas configuraciones"
+            echo "| Severidad | ID | Archivo | Título |"
+            echo "|---|---|---|---|"
+            jq -r '.Results[]? | .Target as $t | .Misconfigurations[]? | "| \(.Severity) | \(.ID) | \($t) | \(.Title) |"' reports/trivy-config.json
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reporte-iac
+          path: reports/
+
+  # -------------------------------------------------------------------
+  container-scan:
+    name: Escaneo de imágenes Docker (Trivy image)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        component: [BACKEND, FRONTEND]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construir imagen
+        run: |
+          name=$(echo "${{ matrix.component }}" | tr 'A-Z' 'a-z')
+          echo "IMG=cuidarteplus-$name:scan" >> "$GITHUB_ENV"
+          docker build -t "cuidarteplus-$name:scan" ${{ matrix.component }}
+      - name: Trivy image
+        run: |
+          mkdir -p reports
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/reports:/out" \
+            "$TRIVY_IMAGE" image "$IMG" --severity CRITICAL,HIGH \
+            --format json --output "/out/trivy-image-${{ matrix.component }}.json" --exit-code 0
+          {
+            echo "### Trivy image ${{ matrix.component }}"
+            jq -r '[.Results[]?.Vulnerabilities[]?] | group_by(.Severity) | map("- \(.[0].Severity): \(length)") | .[]' \
+              "reports/trivy-image-${{ matrix.component }}.json"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reporte-imagen-${{ matrix.component }}
+          path: reports/
+
+  # -------------------------------------------------------------------
+  dast:
+    name: DAST (OWASP ZAP)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Levantar aplicación completa
+        run: |
+          docker compose up -d --build
+          for i in $(seq 1 60); do curl -fs http://localhost:4444/ && break; sleep 3; done
+          curl -fs http://localhost:3333/ > /dev/null
+      - name: ZAP API scan (backend)
+        uses: zaproxy/action-api-scan@v0.9.0
+        continue-on-error: true
+        with:
+          # definición OpenAPI publicada por la propia API (servers -> localhost:4444)
+          target: http://localhost:4444/openapi.json
+          format: openapi
+          cmd_options: "-a"
+          allow_issue_writing: false
+          fail_action: false
+          artifact_name: reporte-dast-api
+      - name: ZAP baseline scan (frontend)
+        uses: zaproxy/action-baseline@v0.14.0
+        continue-on-error: true
+        with:
+          target: http://localhost:3333
+          allow_issue_writing: false
+          fail_action: false
+          artifact_name: reporte-dast-web
+      - name: Detener entorno
+        if: always()
+        run: docker compose down -v
+
+  # -------------------------------------------------------------------
+  security-gate:
+    name: Security Gate
+    runs-on: ubuntu-latest
+    needs: [secrets, sast-semgrep, sca, iac, container-scan, dast]
+    if: always()
+    steps:
+      - name: Evaluar hallazgos
+        env:
+          ENFORCE: ${{ github.event_name != 'workflow_dispatch' || inputs.enforce_gate }}
+          SECRETS: ${{ needs.secrets.outputs.findings }}
+          SAST: ${{ needs.sast-semgrep.outputs.findings }}
+          CRIT: ${{ needs.sca.outputs.critical }}
+          HIGH: ${{ needs.sca.outputs.high }}
+          IAC: ${{ needs.iac.outputs.findings }}
+        run: |
+          {
+            echo "## Security Gate"
+            echo "| Control | Hallazgos | Criterio de bloqueo |"
+            echo "|---|---|---|"
+            echo "| Secretos (Gitleaks) | ${SECRETS:-?} | > 0 |"
+            echo "| SAST (Semgrep) | ${SAST:-?} | > 0 |"
+            echo "| SCA críticas | ${CRIT:-?} | > 0 |"
+            echo "| SCA altas | ${HIGH:-?} | > 0 |"
+            echo "| IaC (Trivy config) | ${IAC:-?} | informativo |"
+            echo "| Imágenes / DAST | ver artefactos | informativo |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "${SECRETS:-1}" -gt 0 ] || [ "${SAST:-1}" -gt 0 ] || [ "${CRIT:-1}" -gt 0 ] || [ "${HIGH:-1}" -gt 0 ]; then
+            echo "::error::Security Gate RECHAZADO: existen vulnerabilidades sin mitigar."
+            [ "$ENFORCE" = "true" ] && exit 1
+            echo "::warning::Gate en modo informativo (enforce_gate=false)."
+          fi

@@ -1,0 +1,9 @@
+# Configuración de Gitleaks: reglas por defecto + excepción para las pruebas
+# automatizadas, que contienen A PROPÓSITO el secreto filtrado para demostrar
+# la vulnerabilidad SEC-08 (no es un secreto nuevo).
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Pruebas de seguridad que reutilizan el secreto ya expuesto"
+paths = ['''tests/''']

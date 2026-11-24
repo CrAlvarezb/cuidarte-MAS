@@ -1,0 +1,15 @@
+{
+  "name": "cuidarteplus-tests",
+  "private": true,
+  "description": "Pruebas automatizadas (funcionales, seguridad y rendimiento) de caja negra contra la API Cuidarte+. Sin dependencias: usa node:test y fetch (Node >= 20).",
+  "type": "module",
+  "scripts": {
+    "test:functional": "node --test --test-reporter=spec api/functional.test.mjs",
+    "test:security": "node --test --test-reporter=spec api/security.test.mjs",
+    "test:performance": "node --test --test-reporter=spec api/performance.test.mjs",
+    "test": "node --test --test-reporter=spec \"api/*.test.mjs\""
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
