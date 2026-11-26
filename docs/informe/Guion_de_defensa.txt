@@ -1,0 +1,86 @@
+GUION DE DEFENSA - CUIDARTE+ EP5/EP6 (10 min de presentación + 5 min de preguntas)
+Integrantes: Cristian Cerda · Cristian Cáceres · Cristian Álvarez
+La defensa es individual: cada integrante debe dominar TODAS las diapositivas.
+
+REPARTO (≈ 3 min 20 s cada uno)
+  Cáceres: 1, 2, 3, 9 y 13  (portada, evolución, diagrama 1, evidencia en GitHub, mantenimiento)
+  Álvarez: 4, 5, 6 y 8      (enfoques, resultados de seguridad, confirmación cruzada, prueba en vivo)
+  Cerda:   7, 10, 11, 12 y 14 (pruebas automatizadas, impacto, mitigación, diagrama 2, veredicto)
+
+CORRESPONDENCIA CON LA RÚBRICA DE PRESENTACIÓN
+  30 % Enfoques y herramientas de seguridad ............ diapositivas 4, 5, 6 y 8
+  14 % Diagramas, controles y cumplimiento normativo ... diapositivas 3 y 12 (diagramas 1 y 2)
+  24 % Evidencias ejecutadas, tiempo y recursos ........ diapositivas 7, 8, 9 y 10 + demo en vivo
+  20 % Plan de mantenimiento y normas .................. diapositiva 13
+  12 % Recursos visuales del impacto ................... gráficos de 5, 7, 9 y 10 + HTML interactivo
+
+--- Diapositiva 1: Cuidarte+: del hallazgo manual a la detección continua
+CÁCERES (≈30 s). Buenos días. Somos Cristian Cáceres, Cristian Álvarez y Cristian Cerda. Presentamos la fase final de Cuidarte+, un sistema clínico donde los médicos registran pacientes y exámenes y los pacientes consultan su ficha. Por tratar datos de salud, un defecto puede ser un incumplimiento legal. El código que nos entregaron tiene defectos intencionales: nuestro objetivo no fue corregirlos, sino demostrar que se detectan de forma automática y continua. Para eso construimos pipelines CI/CD con siete enfoques de seguridad y 45 pruebas automatizadas, que detectaron 22 hallazgos.
+
+--- Diapositiva 2: Cada evaluación cerró una brecha de la anterior
+CÁCERES (≈40 s). Cada evaluación cerró una brecha de la anterior. En la EP1 revisamos el código a mano y encontramos 17 hallazgos, pero sin una ejecución sistemática. En la EP3 armamos un plan trazable de 40 casos con SonarQube, pero las pruebas se ejecutaban por tandas y el gate solo evaluaba código nuevo. En la EP4 concluimos que ninguna técnica sola encuentra todo y recomendamos un CI con Quality Gate obligatorio. Eso es lo que implementamos en la EP5: por ejemplo, el borrado de usuarios sin token que encontramos a mano en la EP1 hoy lo detecta la prueba SEC-01 en cada push.
+
+--- Diapositiva 3: Diagrama 1: cada control verifica una norma
+CÁCERES (≈55 s). Este es el primer diagrama y responde al indicador de diagramas. Tenemos tres workflows en GitHub Actions. A la izquierda está lo que los dispara: un push o un pull request, Dependabot, la ejecución programada de cada lunes o una manual. El CI construye, levanta un entorno efímero con docker compose y ejecuta las 45 pruebas; el pipeline de seguridad corre seis herramientas en paralelo. Lo importante son las etiquetas: cada control indica la norma que verifica. Por ejemplo, las pruebas funcionales verifican la Ley 20.584, porque comprueban que un paciente solo vea su propia ficha; el análisis de dependencias responde a ISO 27001 A.8.8, gestión de vulnerabilidades técnicas; y ZAP a A.8.29, pruebas de seguridad. Al final, dos gates deciden: si rechazan, no se despliega; si aprueban, el CD empaqueta la imagen con el SHA del commit, que da la trazabilidad que pide la Ley 21.663. Llevamos 96 ejecuciones y los gates rechazaron todas las automáticas, que es justo lo esperado.
+
+--- Diapositiva 4: Siete enfoques: cada uno ve lo que otro no ve
+ÁLVAREZ (≈55 s). Este es el indicador con más peso. Combinamos siete enfoques y cada uno ve lo que otro no ve. Gitleaks busca credenciales, incluso en el historial de git: encontró el secreto JWT publicado. El SAST, con Semgrep y CodeQL, lee el código sin ejecutarlo: detectó una comparación de contraseña vulnerable y 32 rutas sin límite de intentos. El SCA cruza las dependencias con bases de CVE: 34 vulnerabilidades, una crítica. Trivy revisa la infraestructura como código y las imágenes: contenedores como root y una imagen node 18 con 4 CVE críticas. El DAST, con OWASP ZAP, ataca la aplicación en ejecución como lo haría un atacante externo. Y nuestras pruebas propias validan reglas de negocio que ninguna herramienta genérica conoce, como que un paciente no pueda crear administradores.
+
+--- Diapositiva 5: 14 de 15 ataques automatizados tuvieron éxito
+ÁLVAREZ (≈40 s). Nuestra suite de seguridad tiene 15 casos y cada uno afirma el comportamiento seguro: si falla, la vulnerabilidad existe y es explotable. Fallaron 14. La categoría más afectada es A01, control de acceso, con 6 fallas. A la derecha está el resto de las herramientas: 3 secretos expuestos, 37 alertas de análisis estático, 34 dependencias vulnerables, 4 CVE críticas en la imagen del backend, 9 tipos de alerta en ZAP y 4 malas configuraciones de contenedores.
+
+--- Diapositiva 6: Una herramienta detecta, otra lo confirma
+ÁLVAREZ (≈40 s). Lo más valioso de combinar enfoques es la confirmación cruzada. Gitleaks detectó el secreto JWT en el repositorio y la prueba SEC-08 confirmó su impacto: con ese secreto firmamos un token de administrador y la API nos entregó todos los usuarios. CodeQL marcó rutas sin límite de intentos y SEC-09 lo confirmó con 15 logins fallidos sin bloqueo. ZAP detectó cabeceras faltantes y CORS abierto, y SEC-11 a SEC-13 lo confirmaron. Así un hallazgo deja de ser una sospecha y pasa a ser una vulnerabilidad demostrada.
+
+--- Diapositiva 7: 45 casos automatizados, un solo comando
+CERDA (≈40 s). Automatizamos 45 casos de caja negra contra la API real, solo con el ejecutor nativo de Node y fetch, sin dependencias externas. Las 24 funcionales pasan; se diseñaron con partición de equivalencia y tablas de decisión por rol, y cada una está trazada a un requisito del ERS. Las de seguridad se diseñaron por riesgo y se mapearon a OWASP. En rendimiento medimos el percentil 95 por endpoint: fallan pacientes y exámenes por un retardo artificial de 5 segundos que tiene el código.
+
+--- Diapositiva 8: Prueba de hoy: 14 ataques confirmados en 0,5 s
+ÁLVAREZ (≈50 s). Esto no es una captura de ejemplo: es la ejecución de hoy, 26 de noviembre, en nuestro equipo. Con el sistema levantado, un solo comando, npm run test:security, lanza los 15 ataques en medio segundo. Fallan 14, y cada falla trae su propia evidencia: se eliminó un usuario sin token, se obtuvo la ficha clínica completa de un paciente solo con su RUT, un paciente creó un usuario administrador y un token forjado con el secreto publicado listó todos los usuarios. La única que pasa es SEC-07: un paciente no puede ver el detalle de otros usuarios. Si el profesor lo permite, lo ejecutamos en vivo ahora mismo: tarda menos de un segundo. Y es reproducible: el mismo resultado se obtuvo en GitHub Actions el 24 y el 26 de noviembre.
+
+--- Diapositiva 9: Evidencia en GitHub Actions: 9 controles en paralelo
+CÁCERES (≈45 s). Esta es la ejecución real de hoy en GitHub Actions, con la duración de cada job. El CI terminó en 2 minutos 33 segundos. El pipeline de seguridad ejecutó nueve jobs en paralelo: Gitleaks tarda 9 segundos, Semgrep 39 y CodeQL menos de un minuto; ZAP es el más largo, 11 minutos, porque ataca cada endpoint. En total son 15 minutos de cómputo resueltos en 11 minutos reales, gracias al paralelismo. A la derecha está la decisión: ambos gates rechazan y, como el CD solo corre si el CI aprueba, el despliegue automático queda omitido. Ese rechazo no es un error, es el control funcionando. Para demostrar que la entrega también funciona, ejecutamos el CD de forma manual: empaquetó, desplegó en staging y pasó el smoke test en menos de 2 minutos.
+
+--- Diapositiva 10: Impacto medido: de horas a segundos
+CERDA (≈40 s). Este gráfico resume el impacto en tiempo, en escala logarítmica. Ejecutar a mano los 45 casos, dejando evidencia, nos tomaría unas tres horas y media; automatizados toman 46 segundos, medidos hoy. Un análisis de seguridad con seis enfoques le tomaría a un analista cerca de un día y medio; el pipeline lo hace en 6 minutos de mediana, sobre 22 ejecuciones reales. Y en recursos, el paralelismo resuelve 15 minutos de cómputo en 11 minutos reales. Pero lo más importante no es la velocidad, sino la frecuencia: antes probábamos una vez antes de entregar; ahora se prueba en cada cambio, con el mismo resultado y con evidencia descargable. Eso es calidad sostenible.
+
+--- Diapositiva 11: Cinco hallazgos críticos y cómo mitigarlos
+CERDA (≈45 s). De los 22 hallazgos, cinco son críticos porque comprometen la ficha clínica: borrar usuarios sin autenticación, exponer la ficha por RUT, que un paciente cree administradores, el secreto JWT publicado y las contraseñas en texto plano. Para cada uno hay una mitigación concreta con su ubicación en el código; en el informe están las 22 fichas. Priorizamos por severidad: críticos en 7 días, graves en 30 y el resto en 90. No corregimos el código, porque el objetivo era detectar, pero cada mitigación ya tiene su prueba: cuando se implemente, pasará a verde y quedará como regresión.
+
+--- Diapositiva 12: Diagrama 2: qué control verifica cada norma
+CERDA (≈45 s). El segundo diagrama es una matriz: en las filas están las normas y en las columnas los controles automatizados. Cada punto indica que ese control genera evidencia para esa exigencia en cada ejecución. Por ejemplo, la Ley 20.584, de confidencialidad de la ficha, la verifican las pruebas de seguridad, las funcionales y ZAP. La última columna muestra quién la incumple hoy: los cinco críticos incumplen las leyes 19.628 y 21.719; H-02 y H-16, la 20.584; y H-13 y H-14, la Ley 21.663 de ciberseguridad, porque la auditoría falla o se puede falsificar. Y un dato clave: la Ley 21.719 entra en vigencia el 1 de diciembre, en cinco días; con estos hallazgos abiertos, el sistema no puede tratar datos reales.
+
+--- Diapositiva 13: Plan de mantenimiento según ISO/IEC/IEEE 14764
+CÁCERES (≈50 s). El plan de mantenimiento sigue los cuatro tipos de la norma ISO/IEC/IEEE 14764, y cada uno se respalda en una norma o buena práctica. Correctivo: mitigar los 22 hallazgos según el plazo de su severidad, respaldado por ISO 27001 A.8.8, gestión de vulnerabilidades técnicas; cada prueba que pasa a verde es la evidencia. Preventivo: Dependabot y el escaneo de cada lunes, como pide el marco NIST SSDF y la Ley 21.663. Adaptativo: cuando cambia la ley, como la 21.719, agregamos pruebas y reglas a los gates. Perfectivo: subir la exigencia, por ejemplo bajar el umbral de rendimiento de 2 segundos a los 300 milisegundos que exige el ERS. Se mide con indicadores que salen directo del pipeline: hoy 5 críticos abiertos, meta cero; 1 de 15 pruebas de seguridad, meta 15. Y declaramos lo pendiente: TLS, accesibilidad y activar la protección de rama, que es gestión de cambios según ISO 27001 A.8.32.
+
+--- Diapositiva 14: Veredicto: aún no apto para datos reales
+CERDA (≈25 s). Cerramos con el mismo veredicto de la EP4: Cuidarte+ aún no es apto para tratar datos reales de pacientes. La diferencia es que ahora ese veredicto no depende de una revisión manual: lo emite y lo hace cumplir el pipeline en cada cambio, con controles respaldados por la ley y un plan de mejora medible. Quedamos atentos a sus preguntas.
+
+DEMOSTRACIÓN EN VIVO (preparar 10 minutos antes)
+  1. En el computador de la defensa: cd cuidarte-MAS && docker compose up -d --build
+     Verificar en el navegador http://localhost:4444 → {"name":"cuidarteplus","status":"ok"}
+  2. Abrir el HTML interactivo (03 Demo interactiva/Centro_de_control_CuidarteMAS.html) en Chrome o Edge.
+  3. En la diapositiva 8, cambiar al HTML → pestaña «Ataque en vivo» → botón «Lanzar ataques».
+     Los 15 ataques corren en menos de 2 s contra la API real. Alternativa por terminal:
+     cd tests && npm run test:security
+  4. Pestaña «Pipeline» → «Simular push»: animación con las duraciones reales de CI #33 y Security #33.
+  5. Respaldo sin Docker: el HTML pasa solo a modo «repetición» con los resultados reales del 26-11-2026.
+     Respaldo sin internet: todo funciona sin conexión (no usa recursos externos).
+  6. Pestaña del navegador abierta en github.com/CrAlvarezb/cuidarte-MAS/actions (CI #33 y Security #33).
+
+PREGUNTAS PROBABLES (5 min)
+• ¿Por qué no corrigieron el código? La pauta pide detectar y proponer mitigaciones; cada mitigación tiene su prueba de regresión que pasará a verde al aplicarla.
+• ¿Diferencia entre SAST y DAST? SAST lee el código sin ejecutarlo (Semgrep, CodeQL); DAST ataca la aplicación en ejecución (OWASP ZAP).
+• ¿Qué es SCA? Análisis de composición: compara las dependencias con bases de CVE (npm audit, Trivy fs).
+• ¿Diferencia entre Trivy config y Trivy image? Config revisa Dockerfile y docker-compose (IaC); image busca CVE en el sistema operativo y runtime de la imagen construida.
+• ¿Por qué el pipeline termina en rojo? Los gates rechazan a propósito: es el control preventivo funcionando. El CD automático queda omitido (skipped).
+• ¿Entonces cómo saben que el CD funciona? Se ejecutó de forma manual (CD #13, 26-11-2026): empaquetó con el SHA del commit, desplegó en staging y pasó el smoke test en 1 min 58 s.
+• ¿Falsos positivos? Los críticos se confirmaron en ejecución: Gitleaks + SEC-08, CodeQL + SEC-09, ZAP + SEC-11 a 13.
+• ¿Por qué falla el rendimiento? delayMiddleware agrega 5 s en /pacientes y /examenes (H-17).
+• ¿Por qué el umbral es 2 s si el ERS pide 300 ms? 2 s es el umbral de bloqueo del gate en un runner compartido. Los endpoints que aprueban están bajo 40 ms, así que también cumplen los 300 ms. El plan perfectivo baja el umbral a 300 ms cuando se corrija H-17.
+• ¿Cuántos recursos consume? Security #33: 15 min de cómputo en 11 min reales por el paralelismo; CI: 2 min 33 s. En un repositorio público los minutos de GitHub Actions no tienen costo.
+• ¿Qué norma respalda el plan de mantenimiento? ISO/IEC/IEEE 14764 define los cuatro tipos; cada uno se apoya en ISO 27001 A.8.8 (vulnerabilidades), NIST SSDF, la Ley 21.719 y la ISO/IEC 25010.
+• ¿Qué es SARIF? Formato estándar de resultados de análisis estático; GitHub Code Scanning lo muestra como alertas.
+• ¿Cómo demuestran que no modificaron el código? El primer commit (57b92ff) contiene el código original; los commits siguientes solo agregan pipelines, pruebas y documentación.
+• ¿Qué pasa el 01-12-2026? Entra en vigencia la Ley 21.719: con 5 hallazgos críticos abiertos el sistema no debe tratar datos reales.
+• ¿Cómo se trazan las pruebas al ERS? Cada caso tiene su requisito (RF-x, NFR-SEG-x, RB-x) según la matriz de trazabilidad de la EP3 (sección 4 del informe).

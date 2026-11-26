@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cuidarte+ · Centro de control DevSecOps</title>
+<style>
+:root{
+  --bg:#071f27; --bg2:#0b2b35; --panel:#0f3541; --panel2:#134452; --line:#1f5563;
+  --text:#eaf6f7; --muted:#9fc0c6; --teal:#2bb3a3; --teal2:#0f7c80; --mint:#9ed9cf;
+  --red:#ff6b57; --red-bg:rgba(255,107,87,.14); --amber:#f2a93b; --amber-bg:rgba(242,169,59,.15);
+  --ok:#57d98f; --ok-bg:rgba(87,217,143,.14); --chip:#163f4b; --shadow:0 10px 30px rgba(0,0,0,.35);
+  --serif:Cambria,"Iowan Old Style",Georgia,serif; --sans:Inter,"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  --mono:"JetBrains Mono","Cascadia Code",Consolas,"DejaVu Sans Mono",monospace;
+}
+:root[data-theme="light"]{
+  --bg:#f4f9f9; --bg2:#ffffff; --panel:#ffffff; --panel2:#eaf3f4; --line:#d5e2e4;
+  --text:#14262e; --muted:#566a72; --teal:#0f7c80; --teal2:#0b3c49; --mint:#0f7c80;
+  --red:#c63b26; --red-bg:#fbe3de; --amber:#a8650f; --amber-bg:#fcebd2; --ok:#16804a; --ok-bg:#dcf3e6; --chip:#eaf3f4;
+  --shadow:0 6px 18px rgba(11,60,73,.12);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans)}
+button{font:inherit;cursor:pointer}
+header{display:flex;align-items:center;gap:18px;padding:14px 28px;background:var(--bg2);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.brand{display:flex;align-items:center;gap:12px}
+.brand h1{margin:0;font:700 22px var(--serif);letter-spacing:.2px}
+.brand small{display:block;color:var(--muted);font:500 12.5px var(--sans);margin-top:2px}
+.team{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.team span{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px}
+.status{display:flex;align-items:center;gap:8px;border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--panel)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 4px var(--amber-bg)}
+.status.live .dot{background:var(--ok);box-shadow:0 0 0 4px var(--ok-bg);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 8px transparent}}
+.iconbtn{background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:7px 10px;font-size:13px}
+nav{display:flex;gap:6px;padding:12px 28px 0;flex-wrap:wrap}
+nav button{background:transparent;border:1px solid transparent;color:var(--muted);padding:9px 16px;border-radius:10px 10px 0 0;font-weight:600;font-size:14.5px}
+nav button kbd{font:600 11px var(--mono);border:1px solid var(--line);border-radius:5px;padding:1px 5px;margin-right:7px;color:var(--muted)}
+nav button.on{color:var(--text);background:var(--panel);border-color:var(--line);border-bottom-color:var(--panel)}
+main{padding:0 28px 28px}
+.view{display:none;background:var(--panel);border:1px solid var(--line);border-radius:0 14px 14px 14px;padding:22px;min-height:calc(100vh - 170px)}
+.view.on{display:block;animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}}
+.vh{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.vh h2{margin:0;font:700 26px var(--serif)}
+.vh p{margin:4px 0 0;color:var(--muted);font-size:14.5px;max-width:900px}
+.btn{background:var(--teal);color:#04161b;border:none;border-radius:10px;padding:11px 18px;font-weight:700;font-size:14.5px;box-shadow:var(--shadow)}
+:root[data-theme="light"] .btn{color:#fff}
+.btn.sec{background:var(--panel2);color:var(--text);border:1px solid var(--line);box-shadow:none}
+.btn:disabled{opacity:.55;cursor:wait}
+.grid{display:grid;gap:14px}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px}
+.muted{color:var(--muted)}
+.tag{display:inline-block;font:700 11px var(--sans);border-radius:5px;padding:2px 7px;margin:2px 3px 0 0;white-space:nowrap}
+.t-ley{background:var(--red-bg);color:var(--red)} .t-iso{background:rgba(43,179,163,.16);color:var(--teal)} .t-ow{background:var(--amber-bg);color:var(--amber)}
+.pipe{display:grid;grid-template-columns:190px 1fr 1fr 250px;gap:14px;align-items:stretch}
+.lane{border:1.5px solid var(--line);border-radius:14px;padding:12px;background:var(--bg2);display:flex;flex-direction:column;gap:8px}
+.lane h3{margin:0 0 2px;font:700 15px var(--sans);display:flex;justify-content:space-between;align-items:center}
+.lane h3 small{font:600 11px var(--sans);color:var(--muted)}
+.node{position:relative;border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:var(--panel);cursor:pointer;overflow:hidden;transition:border-color .2s, transform .15s}
+.node:hover{transform:translateY(-1px);border-color:var(--teal)}
+.node.sel{outline:2px solid var(--teal)}
+.node b{font-size:13.5px;display:block}
+.node .s{font-size:11.5px;color:var(--muted)}
+.node .bar{position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--teal);transition:width .1s linear}
+.node .st{position:absolute;right:8px;top:7px;font:700 10.5px var(--sans);border-radius:4px;padding:1px 6px;display:none}
+.node.run .st{display:block;background:var(--amber-bg);color:var(--amber)}
+.node.done .st{display:block;background:var(--ok-bg);color:var(--ok)}
+.node.fail{border-color:var(--red)} .node.fail .st{display:block;background:var(--red-bg);color:var(--red)}
+.node.skip{opacity:.55} .node.skip .st{display:block;background:var(--chip);color:var(--muted)}
+.gate{margin-top:auto;text-align:center;font-weight:800;border-radius:9px;padding:10px;background:var(--teal2);color:#fff;border:1px solid transparent}
+.gate.fail{background:var(--red);animation:shake .5s} .gate small{display:block;font-weight:500;font-size:11.5px;opacity:.85}
+@keyframes shake{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.trig{background:var(--teal2);color:#fff;border:none} .trig .s{color:#cfeeea}
+.side{display:grid;grid-template-columns:1fr 360px;gap:14px;margin-top:14px}
+.console{background:#03141a;color:#cfe3e6;font:12.5px/1.55 var(--mono);border-radius:12px;padding:12px 14px;height:190px;overflow:auto;border:1px solid var(--line)}
+:root[data-theme="light"] .console{background:#0f1b21}
+.console .r{color:#ff8a7a} .console .g{color:#7ee0a1} .console .y{color:#ffd479} .console .c{color:#9ed9cf}
+.detail h4{margin:0 0 6px;font:700 17px var(--serif)} .detail p{margin:6px 0;font-size:13.5px;line-height:1.45}
+.clock{font:700 28px var(--mono);color:var(--teal)}
+.atk{display:grid;grid-template-columns:1.25fr .9fr;gap:16px}
+.arow{display:grid;grid-template-columns:62px 1fr 92px 60px;gap:10px;align-items:center;padding:8px 10px;border-radius:9px;border:1px solid var(--line);background:var(--bg2);margin-bottom:6px;cursor:pointer;transition:background .2s}
+.arow:hover{border-color:var(--teal)}
+.arow .id{font:700 12.5px var(--mono);color:var(--muted)}
+.arow .nm{font-size:13.5px} .arow .nm small{display:block;color:var(--muted);font-size:11.5px;margin-top:2px}
+.arow .res{font:800 11.5px var(--sans);text-align:center;border-radius:6px;padding:4px 6px;background:var(--chip);color:var(--muted)}
+.arow.vuln{background:var(--red-bg);border-color:rgba(255,107,87,.45)} .arow.vuln .res{background:var(--red);color:#fff}
+.arow.safe{background:var(--ok-bg)} .arow.safe .res{background:var(--ok);color:#04161b}
+.arow.runn .res{background:var(--amber-bg);color:var(--amber)}
+.arow .ms{font:12px var(--mono);color:var(--muted);text-align:right}
+.big{font:800 64px var(--serif);line-height:1;color:var(--red)} .big small{font:600 15px var(--sans);color:var(--muted);display:block;margin-top:6px}
+.owasp .row{display:grid;grid-template-columns:160px 1fr 26px;gap:8px;align-items:center;margin:8px 0;font-size:13px}
+.owasp .trk{height:12px;border-radius:6px;background:var(--chip);overflow:hidden} .owasp .fill{height:100%;width:0;background:var(--red);transition:width .5s}
+pre.raw{background:#03141a;color:#cfe3e6;font:12px/1.5 var(--mono);border-radius:10px;padding:12px;max-height:230px;overflow:auto;white-space:pre-wrap;word-break:break-word;margin:8px 0 0;border:1px solid var(--line)}
+:root[data-theme="light"] pre.raw{background:#0f1b21}
+.mode{font-size:12.5px;border-radius:8px;padding:8px 10px;margin-top:10px;background:var(--amber-bg);color:var(--amber)}
+.mode.live{background:var(--ok-bg);color:var(--ok)}
+.enf{grid-template-columns:repeat(4,1fr)}
+.ecard{cursor:pointer;transition:transform .15s,border-color .2s;min-height:150px}
+.ecard:hover{transform:translateY(-2px);border-color:var(--teal)} .ecard.sel{outline:2px solid var(--teal)}
+.ecard h4{margin:0;font:700 17px var(--serif)} .ecard .tool{color:var(--muted);font-size:12.5px;font-style:italic;margin:2px 0 8px}
+.ecard .det{font-size:13px} .ecard .det b{color:var(--red)}
+.edetail{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.edetail div{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:13.5px;line-height:1.45}
+.edetail h5{margin:0 0 6px;font:700 11.5px var(--sans);letter-spacing:.6px;text-transform:uppercase;color:var(--teal)}
+table.mx{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+.mx th{background:var(--teal2);color:#fff;font-weight:600;padding:9px 6px;font-size:12px;cursor:pointer}
+.mx th:first-child{text-align:left;border-radius:10px 0 0 0;padding-left:12px;cursor:default} .mx th:last-child{border-radius:0 10px 0 0;background:var(--red)}
+.mx td{border-bottom:1px solid var(--line);padding:9px 6px;text-align:center;transition:background .2s}
+.mx td:first-child{text-align:left;cursor:pointer;padding-left:12px} .mx td:first-child small{display:block;color:var(--muted)}
+.mx td:last-child{color:var(--red);font-weight:700;font-size:12px}
+.mx .d{display:inline-block;width:16px;height:16px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px rgba(43,179,163,.18);transition:transform .2s}
+.mx tr.hl td{background:rgba(43,179,163,.10)} .mx td.hc{background:rgba(43,179,163,.14)} .mx .hl .d,.mx td.hc .d{transform:scale(1.25)}
+.callout{margin-top:14px;border-radius:12px;padding:14px 16px;background:var(--red);color:#fff;font-weight:600}
+.kpis{grid-template-columns:repeat(4,1fr)}
+.kpi .v{font:800 34px var(--serif);color:var(--teal)} .kpi .v s{color:var(--muted);font-size:20px;text-decoration:none;font-weight:600}
+.kpi .l{color:var(--muted);font-size:13px;margin-top:2px}
+.cmp .row{display:grid;grid-template-columns:230px 1fr;gap:12px;align-items:center;margin:12px 0}
+.cmp .bars{display:flex;flex-direction:column;gap:5px}
+.cmp .b{height:22px;border-radius:5px;width:0;transition:width 1.2s cubic-bezier(.2,.8,.2,1);display:flex;align-items:center;padding:0 8px;font-size:12px;font-weight:700;white-space:nowrap}
+.cmp .man{background:var(--chip);color:var(--muted);border:1px solid var(--line)} .cmp .aut{background:var(--teal);color:#04161b}
+.gantt .row{display:grid;grid-template-columns:175px 1fr 70px;gap:8px;align-items:center;font-size:12.5px;margin:4px 0}
+.gantt .trk{position:relative;height:14px;background:var(--chip);border-radius:4px}
+.gantt .seg{position:absolute;top:0;height:100%;border-radius:4px;background:var(--teal);width:0;transition:width .9s ease}
+.gantt .seg.g{background:var(--red)} .gantt .seg.ci{background:var(--teal2)}
+.evo{grid-template-columns:repeat(3,1fr)}
+.evo .card h4{margin:0 0 6px;font:700 18px var(--serif)} .evo .card ul{margin:6px 0 0;padding-left:18px;font-size:13.5px;line-height:1.6}
+.mt{grid-template-columns:repeat(4,1fr)}
+.mt .card h4{margin:0;font:700 18px var(--serif)} .mt .n{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--teal);color:#04161b;font-weight:800;margin-right:8px}
+.mt .card p{font-size:13.5px;margin:8px 0}
+.steps{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.steps button{flex:1;min-width:120px;background:var(--bg2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px;font-weight:700;font-size:13px}
+.steps button.on{background:var(--teal);color:#04161b;border-color:var(--teal)}
+.stepd{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:10px}
+.stepd div{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:13.5px}
+.stepd h5{margin:0 0 6px;font:700 11.5px var(--sans);text-transform:uppercase;letter-spacing:.6px;color:var(--teal)}
+.ind .row{display:grid;grid-template-columns:230px 1fr 160px;gap:12px;align-items:center;margin:9px 0;font-size:13.5px}
+.ind .trk{height:12px;border-radius:6px;background:var(--chip);overflow:hidden} .ind .fill{height:100%;background:var(--red);width:0;transition:width 1s}
+footer{padding:0 28px 18px;color:var(--muted);font-size:12px;display:flex;gap:14px;flex-wrap:wrap}
+@media (max-width:1100px){.pipe{grid-template-columns:1fr 1fr}.atk,.side{grid-template-columns:1fr}.enf,.kpis,.mt,.evo{grid-template-columns:1fr 1fr}.edetail,.stepd{grid-template-columns:1fr 1fr}}
+@media (max-width:640px){header,nav,main{padding-left:14px;padding-right:14px}.pipe,.enf,.kpis,.mt,.evo,.edetail,.stepd{grid-template-columns:1fr}.team{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <svg width="38" height="38" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3 34 8v11c0 9-6 15-14 18C12 34 6 28 6 19V8z" fill="#0f7c80"/><path d="M17 12h6v5h5v6h-5v5h-6v-5h-5v-6h5z" fill="#eaf6f7"/></svg>
+    <div><h1>Cuidarte+ · Centro de control DevSecOps</h1><small>ISY1102 · EP5/EP6 · Sección 003V · Docente: Cristian Eduardo Medina Céspedes</small></div>
+  </div>
+  <div class="team"><span>Cristian Cerda</span><span>Cristian Cáceres</span><span>Cristian Álvarez</span></div>
+  <button class="iconbtn" id="themeBtn" title="Tema claro u oscuro (T)">◐ Tema</button>
+</header>
+<nav id="tabs"></nav>
+<main>
+
+<section class="view" id="v-pipeline">
+  <div class="vh"><div><h2>El pipeline en acción</h2><p>Simulación con las duraciones reales de CI #33 y Security #33 (26-11-2026), aceleradas 60 veces. Haz clic en cualquier control para ver qué detecta y qué norma verifica.</p></div>
+  <div style="display:flex;gap:10px;align-items:center"><div class="clock" id="clock">00:00</div><button class="btn" id="simBtn">▶ Simular push</button></div></div>
+  <div class="pipe" id="pipe"></div>
+  <div class="side"><div class="console" id="console"></div><div class="card detail" id="pdetail"><h4>Selecciona un control</h4><p class="muted">Cada nodo muestra su función, la norma que verifica y el resultado real de la última ejecución.</p></div></div>
+</section>
+
+<section class="view" id="v-ataque">
+  <div class="vh"><div><h2>Las 15 pruebas de seguridad, paso a paso</h2><p>Reproducción de la ejecución real de <code>npm run test:security</code> del 26-11-2026. Cada prueba afirma el comportamiento seguro; si falla, la vulnerabilidad queda confirmada. La demostración en vivo se hace en el terminal del repositorio.</p></div>
+  <div style="display:flex;gap:10px"><button class="btn" id="atkBtn">▶ Reproducir</button><button class="btn sec" id="atkReset">Reiniciar</button></div></div>
+  <div class="atk">
+    <div id="atkList"></div>
+    <div>
+      <div class="card"><div class="big" id="atkCount">0 / 15<small>pruebas fallidas = vulnerabilidades confirmadas</small></div><div class="mode" id="atkMode">Resultados reales registrados en la ejecución del 26-11-2026, 17:33, y en GitHub Actions (CI #29 y CI #33).</div></div>
+      <div class="card owasp" style="margin-top:12px"><b>Fallas por categoría OWASP Top 10</b><div id="owaspBars"></div></div>
+      <div class="card" style="margin-top:12px"><b id="rawTitle">Evidencia de la prueba</b><div class="muted" style="font-size:12.5px">Selecciona una prueba para ver el mensaje que devolvió la aserción.</div><pre class="raw" id="raw">—</pre></div>
+    </div>
+  </div>
+</section>
+
+<section class="view" id="v-enfoques">
+  <div class="vh"><div><h2>Siete enfoques: cada uno ve lo que otro no ve</h2><p>Estático, dinámico, de composición y de configuración. Haz clic en un enfoque para ver su finalidad, su relevancia y el hallazgo real que detectó.</p></div></div>
+  <div class="grid enf" id="enfGrid"></div>
+</section>
+
+<section class="view" id="v-norma">
+  <div class="vh"><div><h2>Qué control verifica cada norma</h2><p>Haz clic en una norma (fila) o en un control (columna). La última columna muestra los hallazgos que hoy incumplen la norma.</p></div></div>
+  <table class="mx" id="mx"></table>
+  <div class="card" id="mxDetail" style="margin-top:12px"><b>Selecciona una norma o un control</b></div>
+  <div class="callout">La Ley 21.719 entra en vigencia el 01-12-2026. Con 5 hallazgos críticos abiertos, el sistema no debe tratar datos reales: el pipeline lo hace cumplir rechazando cada cambio.</div>
+</section>
+
+<section class="view" id="v-impacto">
+  <div class="vh"><div><h2>Impacto en tiempo y recursos</h2><p>Tiempos automatizados medidos (ejecución local y GitHub Actions del 26-11-2026); tiempos manuales estimados por el equipo a partir de la ejecución por tandas de la EP3.</p></div><button class="btn sec" id="impReplay">↻ Animar</button></div>
+  <div class="grid kpis" id="kpis"></div>
+  <div class="grid" style="grid-template-columns:1.1fr 1fr;margin-top:14px">
+    <div class="card cmp"><b>Manual vs automatizado (escala logarítmica)</b><div id="cmp"></div></div>
+    <div class="card gantt"><b>Jobs reales en paralelo · CI #33 y Security #33</b><div id="gantt" style="margin-top:8px"></div></div>
+  </div>
+  <div class="grid evo" style="margin-top:14px" id="evo"></div>
+</section>
+
+<section class="view" id="v-mant">
+  <div class="vh"><div><h2>Plan de mantenimiento según ISO/IEC/IEEE 14764</h2><p>Cuatro tipos de mantenimiento, cada uno respaldado por una norma o buena práctica, aplicados en todo el ciclo de vida y medidos con indicadores que salen del pipeline.</p></div></div>
+  <div class="grid mt" id="mt"></div>
+  <div class="steps" id="steps"></div>
+  <div class="stepd" id="stepd"></div>
+  <div class="card ind" style="margin-top:14px"><b>Indicadores de seguimiento: línea base EP5 → meta</b><div id="ind"></div></div>
+</section>
+</main>
+<footer><span>Datos reales: ejecución local 26-11-2026 17:33 · CI #33, Security #33 y CD #13 en GitHub Actions</span><span>github.com/CrAlvarezb/cuidarte-MAS</span><span>Teclas: 1–6 pestañas · Espacio ejecuta · T tema</span></footer>
+
+<script>
+const DATA = {"replay": {"SEC-01": {"ok": false, "ms": 37, "msg": "Se eliminó el usuario 5 sin autenticación (HTTP 200)"}, "SEC-02": {"ok": false, "ms": 7, "msg": "Ficha clínica expuesta sin autenticación: {\"id\":\"1\",\"rut\":\"11111111-1\",\"primer_nombre\":\"Juan\",\"apellido_paterno\":\"Pérez\",\"apellido_materno\":\"Gómez\",\"fecha_nacimie..."}, "SEC-03": {"ok": false, "ms": 9, "msg": "Se aceptó creación de rol sin autenticación (HTTP 201)"}, "SEC-04": {"ok": false, "ms": 9, "msg": "Endpoint de modificación de roles sin control de acceso (HTTP 200)"}, "SEC-05": {"ok": false, "ms": 5, "msg": "Catálogo accesible sin autenticación (HTTP 200)"}, "SEC-06": {"ok": false, "ms": 21, "msg": "Paciente creó un usuario con rol admin (HTTP 201)"}, "SEC-07": {"ok": true, "ms": 7, "msg": "El paciente recibió 403 al pedir /usuarios/1: el control existe"}, "SEC-08": {"ok": false, "ms": 7, "msg": "Token forjado con secreto expuesto permitió listar todos los usuarios como admin"}, "SEC-09": {"ok": false, "ms": 56, "msg": "15 intentos fallidos consecutivos sin bloqueo ni rate limiting (HTTP 429)"}, "SEC-10": {"ok": false, "ms": 9, "msg": "Se aceptó la contraseña '123456'"}, "SEC-11": {"ok": false, "ms": 8, "msg": "Faltan cabeceras: x-content-type-options, x-frame-options, strict-transport-security, content-security-policy"}, "SEC-12": {"ok": false, "ms": 3, "msg": "Cabecera expuesta: X-Powered-By: Express"}, "SEC-13": {"ok": false, "ms": 3, "msg": "CORS permite cualquier origen (*)"}, "SEC-14": {"ok": false, "ms": 14, "msg": "Mensaje interno expuesto: {\"error\":\"Error al obtener paciente\",\"glosa\":\"invalid input syntax for type bigint: \\\"abc\\\"\"}"}, "SEC-15": {"ok": false, "ms": 22, "msg": "La operación falló al registrar auditoría (HTTP 500): {\"error\":\"Error al crear rol\",\"glosa\":\"invalid input syntax for type bigint: \\\"admin\\\"\"}"}}, "ci": [{"name": "Backend - instalación y verificación", "start": 0.0, "dur": 17.0, "concl": "success"}, {"name": "Frontend - lint y build", "start": 0.0, "dur": 22.0, "concl": "success"}, {"name": "Pruebas automatizadas contra stack Docker", "start": 24.0, "dur": 123.0, "concl": "success"}, {"name": "Quality Gate", "start": 149.0, "dur": 4.0, "concl": "failure"}], "sec": [{"name": "SAST (Semgrep)", "start": 0.0, "dur": 39.0, "concl": "success"}, {"name": "Escaneo de imágenes Docker (Trivy image) (FRONTEND)", "start": 1.0, "dur": 65.0, "concl": "success"}, {"name": "SCA - dependencias (npm audit + Trivy)", "start": 0.0, "dur": 31.0, "concl": "success"}, {"name": "IaC / configuración (Trivy config)", "start": 0.0, "dur": 13.0, "concl": "success"}, {"name": "Secret scanning (Gitleaks)", "start": 0.0, "dur": 9.0, "concl": "success"}, {"name": "SAST (CodeQL)", "start": 1.0, "dur": 58.0, "concl": "success"}, {"name": "Escaneo de imágenes Docker (Trivy image) (BACKEND)", "start": 1.0, "dur": 35.0, "concl": "success"}, {"name": "DAST (OWASP ZAP)", "start": 1.0, "dur": 665.0, "concl": "success"}, {"name": "Security Gate", "start": 668.0, "dur": 2.0, "concl": "failure"}], "runs_total": 96, "hallazgos": [{"id": "H-01", "nombre": "DELETE /usuarios/:id elimina usuarios sin autenticación", "impacto": "CRÍTICO", "donde": "BACKEND/src/routes/users.js:571 · OWASP A01 · detectado por SEC-01", "mitig": "Aplicar un middleware de autenticación global y verificar el rol admin antes de eliminar; registrar la eliminación en la auditoría.", "verif": "SEC-01 debe responder 401 (sin token) y 403 (con rol no admin)."}, {"id": "H-02", "nombre": "Ficha clínica completa expuesta sin token vía GET /pacientes/buscar/rut/:rut", "impacto": "CRÍTICO", "donde": "BACKEND/src/routes/pacientes.js:249 · OWASP A01 · Ley 20.584 · detectado por SEC-02", "mitig": "Exigir JWT y rol médico o admin; minimizar los campos devueltos y registrar cada acceso a la ficha.", "verif": "SEC-02 debe responder 401; CP-F04.4 y CP-F04.5 siguen aprobando."}, {"id": "H-03", "nombre": "Escalamiento de privilegios: un paciente crea usuarios con rol admin", "impacto": "CRÍTICO", "donde": "BACKEND/src/routes/users.js:23 · OWASP A01 · detectado por SEC-06", "mitig": "Validar que el solicitante sea admin y usar una lista blanca de roles asignables.", "verif": "SEC-06 debe responder 403."}, {"id": "H-04", "nombre": "Endpoints sin autenticación: CRUD de /roles y catálogo /tipo-examen", "impacto": "GRAVE", "donde": "BACKEND/src/routes/roles.js y tipoExamen · OWASP A01 · detectado por SEC-03, SEC-04 y SEC-05", "mitig": "Proteger con autenticación; /roles solo para admin y /tipo-examen para usuarios autenticados.", "verif": "SEC-03, SEC-04 y SEC-05 deben responder 401."}, {"id": "H-05", "nombre": "Secreto JWT publicado en el repositorio: permite falsificar tokens de administrador", "impacto": "CRÍTICO", "donde": ".env:1, BACKEND/.env:3, README.md:30 · OWASP A02/A07 · detectado por Gitleaks y confirmado por SEC-08", "mitig": "Rotar el secreto, guardarlo en GitHub Secrets o un gestor de secretos, sacar .env del repositorio y agregar Gitleaks como pre-commit.", "verif": "Gitleaks con 0 hallazgos y SEC-08 rechaza el token forjado."}, {"id": "H-06", "nombre": "Secreto JWT por defecto «inseguro» si falta la variable de entorno", "impacto": "GRAVE", "donde": "const JWT_SECRET = process.env.JWT_SECRET || \"inseguro\" en las rutas · OWASP A02 · revisión de código", "mitig": "La aplicación no debe arrancar si JWT_SECRET no está definido (fail fast).", "verif": "Prueba de arranque sin la variable: el contenedor termina con error."}, {"id": "H-07", "nombre": "Contraseñas almacenadas y comparadas en texto plano", "impacto": "CRÍTICO", "donde": "BACKEND/src/routes/auth.js:21,110 y users.js:36 · OWASP A02 · Semgrep node_timing_attack", "mitig": "Usar bcrypt o argon2 con sal, comparación en tiempo constante y migrar las contraseñas existentes.", "verif": "Semgrep sin node_timing_attack; la BD no contiene contraseñas legibles."}, {"id": "H-08", "nombre": "Credenciales de base de datos en el código (alone15, postgres/postgres)", "impacto": "GRAVE", "donde": "BACKEND/src/db.js:6 y docker-compose.yml · OWASP A07 · revisión de código (SonarQube SQ-01 en la EP3)", "mitig": "Inyectar las credenciales por variables o secretos y usar un usuario de BD con mínimo privilegio.", "verif": "Regla de secretos sin hallazgos en db.js; compose sin contraseña por defecto."}, {"id": "H-09", "nombre": "Sin límite de intentos de login (fuerza bruta)", "impacto": "GRAVE", "donde": "BACKEND/src/routes/auth.js:10 · OWASP A07 · CodeQL (32 rutas) y SEC-09", "mitig": "express-rate-limit en el login y bloqueo temporal de la cuenta.", "verif": "SEC-09 obtiene 429 antes del intento 15; CodeQL sin missing-rate-limiting en auth."}, {"id": "H-10", "nombre": "Política de contraseñas débil (mínimo 6 caracteres; acepta 123456)", "impacto": "MODERADO", "donde": "BACKEND/src/validations/auth.js · OWASP A07 · SEC-10", "mitig": "Mínimo 12 caracteres y bloqueo de contraseñas comprometidas (ASVS 2.1).", "verif": "SEC-10 responde 400."}, {"id": "H-11", "nombre": "Los errores exponen detalles internos de PostgreSQL", "impacto": "MODERADO", "donde": "glosa: err.message en todas las rutas · OWASP A05 · SEC-14 y ZAP 90022/10023", "mitig": "Mensajes genéricos al cliente y detalle solo en los logs del servidor.", "verif": "SEC-14 aprueba; ZAP sin Application Error Disclosure."}, {"id": "H-12", "nombre": "Sin cabeceras de seguridad, X-Powered-By expuesto y CORS *", "impacto": "MODERADO", "donde": "BACKEND/src/app.js:21 y FRONTEND/nginx.conf · OWASP A05 · SEC-11 a SEC-13 y ZAP", "mitig": "helmet en Express, CORS restringido a FRONTEND_URL y cabeceras CSP, HSTS y X-Frame-Options en nginx.", "verif": "SEC-11, SEC-12 y SEC-13 aprueban; ZAP sin alertas de cabeceras."}, {"id": "H-13", "nombre": "La auditoría falla con HTTP 500 y deja operaciones sin registro", "impacto": "GRAVE", "donde": "BACKEND/src/routes/roles.js:25,65,83 y users.js:584 · OWASP A09 · SEC-15", "mitig": "Insertar authUser.usuarioId (BIGINT) en lugar del nombre de usuario.", "verif": "SEC-15 responde 201 y la entrada aparece en /auditoria."}, {"id": "H-14", "nombre": "POST /auditoria permite escribir registros arbitrarios (falsificación de logs)", "impacto": "MODERADO", "donde": "BACKEND/src/routes/audit.js:19 · OWASP A09 · revisión de código", "mitig": "Registrar la auditoría solo desde el servidor (append-only) y eliminar la escritura pública.", "verif": "Nueva prueba: POST /auditoria con token de paciente debe responder 403."}, {"id": "H-15", "nombre": "Archivos validados solo por el MIME del cliente; nombre sin sanitizar en Content-Disposition", "impacto": "MODERADO", "donde": "BACKEND/src/routes/documentos.js:15,237,249 · OWASP A03/A04 · Semgrep (documentos.js:206/252) y revisión", "mitig": "Validar la firma real del archivo (magic bytes) y codificar el nombre según RFC 6266.", "verif": "Semgrep sin express_xss ni direct-response-write en documentos.js."}, {"id": "H-16", "nombre": "Directorio /files/documentos servido sin autenticación", "impacto": "GRAVE", "donde": "BACKEND/src/app.js:43 · OWASP A01 · Ley 20.584 · revisión de código", "mitig": "Servir los archivos solo mediante un endpoint autenticado que verifique la pertenencia del documento.", "verif": "Nueva prueba: GET /files/documentos/<archivo> sin token debe responder 401."}, {"id": "H-17", "nombre": "Retardo artificial de 5 s en pacientes, exámenes y documentos", "impacto": "MODERADO", "donde": "BACKEND/src/middleware/delay.js · ISO/IEC 25010 desempeño · NF-01.3 y NF-01.5", "mitig": "Eliminar delayMiddleware en producción o activarlo solo con una bandera de pruebas.", "verif": "NF-01.3 y NF-01.5 con p95 < 2 s (meta posterior: 300 ms)."}, {"id": "H-18", "nombre": "Dependencias vulnerables y obsoletas (proxy-addr, jws, path-to-regexp, multer 1.x…)", "impacto": "GRAVE", "donde": "package-lock.json de backend y frontend · OWASP A06 · npm audit y Trivy fs", "mitig": "npm audit fix, actualizar multer a 2.x y revisar semanalmente los PR de Dependabot.", "verif": "npm audit con 0 críticas y 0 altas; Security Gate aprueba SCA."}, {"id": "H-19", "nombre": "Token JWT guardado en localStorage (robable mediante XSS)", "impacto": "MODERADO", "donde": "FRONTEND/src/context/AuthContext.jsx:41 · OWASP A07 · revisión de código", "mitig": "Cookie HttpOnly; Secure; SameSite=Strict emitida por el backend.", "verif": "Inspección del frontend: sin token en localStorage."}, {"id": "H-20", "nombre": "13 errores de ESLint y bundle de 1,4 MB sin code-splitting", "impacto": "LEVE", "donde": "FRONTEND/src · ISO/IEC 25010 mantenibilidad · ESLint y vite build", "mitig": "Corregir los errores de lint y aplicar code-splitting con import() dinámico.", "verif": "ESLint con 0 errores en el CI."}, {"id": "H-21", "nombre": "Contenedores: node:18 fuera de soporte, ejecución como root, sin HEALTHCHECK y build no reproducible en el frontend", "impacto": "MODERADO", "donde": "BACKEND/Dockerfile y FRONTEND/Dockerfile · OWASP A05 · Trivy config e image", "mitig": "Usar node:22-alpine, USER node, npm ci con lockfile y HEALTHCHECK.", "verif": "Trivy config sin DS002/DS026; Trivy image sin CVE críticas."}, {"id": "H-22", "nombre": "La imagen del backend no se podía construir desde el repositorio (carpetas uploads/ vacías)", "impacto": "MODERADO", "donde": "BACKEND/Dockerfile:15 · reproducibilidad · detectado por el primer run del CI", "mitig": "Crear el directorio con RUN mkdir -p en lugar de COPY (se agregó .gitkeep para conservar la estructura original).", "verif": "Build del CI exitoso desde un clon limpio."}]};
+const $ = s => document.querySelector(s);
+const el = (t, cls, html) => { const e = document.createElement(t); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+const fmt = s => { s = Math.round(s); return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); };
+const human = s => s < 60 ? `${Math.round(s)} s` : `${Math.floor(s / 60)} min ${String(Math.round(s % 60)).padStart(2, "0")} s`;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+try { const t = localStorage.getItem("cuidarte-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+$("#themeBtn").onclick = toggleTheme;
+function toggleTheme() { const r = document.documentElement; r.dataset.theme = r.dataset.theme === "light" ? "dark" : "light"; try { localStorage.setItem("cuidarte-theme", r.dataset.theme); } catch (e) {} }
+const TABS = [["pipeline", "Pipeline"], ["ataque", "Pruebas de seguridad"], ["enfoques", "Enfoques"], ["norma", "Normativa"], ["impacto", "Impacto"], ["mant", "Mantenimiento"]];
+TABS.forEach(([id, name], i) => { const b = el("button", "", `<kbd>${i + 1}</kbd>${name}`); b.onclick = () => show(id); b.dataset.id = id; $("#tabs").append(b); });
+function show(id) {
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.id === id));
+  document.querySelectorAll(".view").forEach(v => v.classList.toggle("on", v.id === "v-" + id));
+  if (id === "impacto") animateImpact();
+  if (id === "mant") animateInd();
+  location.hash = id;
+}
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT") return;
+  const n = parseInt(e.key); if (n >= 1 && n <= TABS.length) show(TABS[n - 1][0]);
+  if (e.key === "t" || e.key === "T") toggleTheme();
+  if (e.code === "Space") { e.preventDefault(); const on = document.querySelector(".view.on").id; if (on === "v-pipeline") simulate(); if (on === "v-ataque") replay(); if (on === "v-impacto") animateImpact(true); }
+});
+
+/* ---------- pipeline ---------- */
+const NODES = {
+  trig: [["Desarrollador", "git push · pull request"], ["Dependabot", "PR semanales"], ["Programado", "lunes 06:00 UTC"], ["Manual", "Run workflow"]],
+  ci: [
+    { id: "Backend - instalación y verificación", t: "Build backend", s: "npm ci + node --check", norm: [["iso", "ISO 25010 mantenibilidad"]], fn: "Instala con el lockfile y verifica la sintaxis de todos los módulos: el build debe ser reproducible.", res: "Aprobado." },
+    { id: "Frontend - lint y build", t: "Build frontend + ESLint", s: "vite build · 0 errores", norm: [["iso", "ISO 25010 mantenibilidad"]], fn: "Análisis estático de calidad y build de producción.", res: "13 errores y 3 advertencias de ESLint (H-20); build exitoso con bundle de 1,4 MB." },
+    { id: "Pruebas automatizadas contra stack Docker", t: "Entorno efímero + 45 pruebas", s: "funcionales · seguridad · rendimiento", norm: [["ley", "Ley 20.584"], ["ow", "OWASP Top 10"], ["iso", "ISO 25010"]], fn: "Levanta PostgreSQL, API y web con docker compose y ejecuta 24 pruebas funcionales, 15 de seguridad y 6 de rendimiento.", res: "Funcionales 24/24 · Seguridad 1/15 · Rendimiento 4/6." },
+    { id: "Quality Gate", gate: true, t: "◆ Quality Gate", s: "rechaza si falla build, ESLint o cualquier prueba", fn: "Decide si el cambio puede integrarse y desplegarse.", res: "RECHAZADO: ESLint, 14 pruebas de seguridad y 2 de rendimiento.", norm: [["iso", "ISO 27001 A.8.32"]] }],
+  sec: [
+    { id: "Secret scanning (Gitleaks)", t: "Gitleaks", s: "secretos en código e historial", norm: [["iso", "ISO 27001 A.5.17"], ["ley", "Ley 21.719"]], fn: "Busca credenciales con patrones y entropía en todo el historial de git.", res: "3 secretos: JWT_SECRET en .env, BACKEND/.env y README.md (H-05)." },
+    { id: "SAST (Semgrep)", t: "Semgrep (SAST)", s: "patrones inseguros en el código", norm: [["iso", "ISO 27001 A.8.28"], ["ow", "OWASP"]], fn: "Analiza el código sin ejecutarlo con reglas OWASP, Node.js, Express, JWT y Docker.", res: "42 hallazgos: 5 en la aplicación (timing attack en auth.js:21, XSS en documentos.js:206, contenedores como root)." },
+    { id: "SAST (CodeQL)", t: "CodeQL (SAST)", s: "flujo de datos · security-extended", norm: [["iso", "ISO 27001 A.8.28"]], fn: "Sigue el flujo de datos desde la entrada hasta operaciones sensibles.", res: "32 rutas sin limitación de tasa (H-09), confirmado por SEC-09." },
+    { id: "SCA - dependencias (npm audit + Trivy)", t: "npm audit + Trivy fs (SCA)", s: "dependencias con CVE", norm: [["iso", "ISO 27001 A.8.8"], ["ley", "Ley 21.663"]], fn: "Cruza el package-lock.json con bases de CVE y GHSA.", res: "Backend: 10 (1 crítica, 7 altas). Frontend: 24 (17 altas) (H-18)." },
+    { id: "IaC / configuración (Trivy config)", t: "Trivy config (IaC)", s: "Dockerfile y compose", norm: [["iso", "ISO 27001 A.8.9"]], fn: "Evalúa la infraestructura como código contra el CIS Docker Benchmark.", res: "4 malas configuraciones: contenedores como root y sin HEALTHCHECK (H-21)." },
+    { id: "Escaneo de imágenes Docker (Trivy image) (BACKEND)", t: "Trivy image backend", s: "CVE del SO y runtime", norm: [["iso", "ISO 27001 A.8.8"]], fn: "Escanea la imagen construida.", res: "node:18 fuera de soporte: 4 CVE críticas y 46 altas." },
+    { id: "Escaneo de imágenes Docker (Trivy image) (FRONTEND)", t: "Trivy image frontend", s: "CVE del SO y runtime", norm: [["iso", "ISO 27001 A.8.8"]], fn: "Escanea la imagen de nginx con el frontend.", res: "0 CVE críticas o altas." },
+    { id: "DAST (OWASP ZAP)", t: "OWASP ZAP (DAST)", s: "ataca la API y la web en ejecución", norm: [["iso", "ISO 27001 A.8.29"], ["ow", "OWASP"]], fn: "Importa la OpenAPI de la API y revisa cada ruta; baseline sobre el frontend.", res: "API: 9 tipos de alerta (CORS *, CSP, X-Powered-By, errores internos). Web: 10." },
+    { id: "Security Gate", gate: true, t: "◆ Security Gate", s: "secretos, SAST o CVE críticas/altas", fn: "Consolida los hallazgos y decide.", res: "RECHAZADO: secretos, SAST y dependencias críticas/altas.", norm: [["iso", "ISO 27001 A.8.25"]] }],
+  cd: [
+    { t: "Empaquetar imágenes", s: "tag = SHA + checksum SHA-256", norm: [["ley", "Ley 21.663 trazabilidad"]], fn: "Construye las imágenes, las etiqueta con el SHA del commit y calcula su checksum.", res: "Solo corre si el CI aprueba. CD #13 manual: éxito." },
+    { t: "Desplegar en staging", s: "mismas imágenes, sin reconstruir", norm: [["iso", "ISO 27001 A.8.31"]], fn: "Despliega exactamente el artefacto verificado.", res: "CD #13: desplegado en staging." },
+    { t: "Smoke test", s: "API · frontend · login", fn: "Valida que el despliegue funciona; si falla, se detiene.", res: "CD #13: smoke test correcto en 1 min 58 s." }]
+};
+const jobMap = {}; DATA.ci.forEach(j => jobMap[j.name] = j); DATA.sec.forEach(j => jobMap[j.name] = j);
+function nodeEl(n) {
+  if (n.gate) { const g = el("div", "gate", `${n.t}<small>${n.s}</small>`); g.onclick = () => selNode(g, n); n.dom = g; return g; }
+  const d = el("div", "node", `<span class="st"></span><b>${n.t}</b><div class="s">${n.s}</div>${(n.norm || []).map(([k, v]) => `<span class="tag t-${k}">${v}</span>`).join("")}<div class="bar"></div>`);
+  d.onclick = () => selNode(d, n); n.dom = d; return d;
+}
+function selNode(d, n) { document.querySelectorAll(".node,.gate").forEach(x => x.classList.remove("sel")); d.classList.add("sel"); detail(n); }
+function detail(n) {
+  const j = jobMap[n.id];
+  $("#pdetail").innerHTML = `<h4>${n.t.replace("◆ ", "")}</h4><p><b>Qué hace:</b> ${n.fn}</p><p><b>Resultado real:</b> ${n.res}</p>${j ? `<p><b>Duración real:</b> ${human(j.dur)}</p>` : ""}${n.norm ? `<p><b>Norma que verifica:</b> ${n.norm.map(([k, v]) => `<span class="tag t-${k}">${v}</span>`).join("")}</p>` : ""}`;
+}
+(function buildPipe() {
+  const p = $("#pipe");
+  const t = el("div", "lane", "<h3>Disparadores</h3>"); NODES.trig.forEach(([a, b]) => t.append(el("div", "node trig", `<b>${a}</b><div class="s">${b}</div>`))); p.append(t);
+  const ci = el("div", "lane", `<h3>① CI · ci.yml <small>calidad</small></h3>`); NODES.ci.forEach(n => ci.append(nodeEl(n))); p.append(ci);
+  const sec = el("div", "lane", `<h3>② Security · security.yml <small>6 enfoques en paralelo</small></h3>`); NODES.sec.forEach(n => sec.append(nodeEl(n))); p.append(sec);
+  const cd = el("div", "lane", `<h3>③ CD · cd.yml <small>solo si el CI aprueba</small></h3>`); NODES.cd.forEach(n => cd.append(nodeEl(n)));
+  cd.append(el("div", "card", `<b>${DATA.runs_total} ejecuciones</b><div class="muted" style="font-size:12.5px">registradas en GitHub Actions; los gates rechazaron todas las automáticas.</div>`)); p.append(cd);
+})();
+function log(txt, cls = "") { const c = $("#console"); c.insertAdjacentHTML("beforeend", `<div class="${cls}">${txt}</div>`); c.scrollTop = c.scrollHeight; }
+log('<span class="c">$</span> git push origin main   <span class="c"># presiona «Simular push» o la barra espaciadora</span>');
+let simRunning = false;
+async function simulate() {
+  if (simRunning) return; simRunning = true; $("#simBtn").disabled = true;
+  document.querySelectorAll(".node,.gate").forEach(n => { n.classList.remove("run", "done", "fail", "skip"); const b = n.querySelector(".bar"); if (b) b.style.width = "0"; const s = n.querySelector(".st"); if (s) s.textContent = ""; });
+  NODES.ci[3].dom.innerHTML = `${NODES.ci[3].t}<small>${NODES.ci[3].s}</small>`;
+  NODES.sec[8].dom.innerHTML = `${NODES.sec[8].t}<small>${NODES.sec[8].s}</small>`;
+  $("#console").innerHTML = ""; log('<span class="c">$</span> git push origin main'); log('<span class="y">▶ Se disparan en paralelo CI #33 y Security #33</span>');
+  const all = [...NODES.ci, ...NODES.sec].filter(n => jobMap[n.id]);
+  const end = Math.max(...all.map(n => jobMap[n.id].start + jobMap[n.id].dur));
+  const SPEED = 60, t0 = performance.now(); const started = new Set(), finished = new Set();
+  await new Promise(res => {
+    function frame() {
+      const t = (performance.now() - t0) / 1000 * SPEED; $("#clock").textContent = fmt(Math.min(t, end));
+      all.forEach(n => {
+        const j = jobMap[n.id]; const d = n.dom;
+        if (t >= j.start && !started.has(n)) { started.add(n); if (!n.gate) { d.classList.add("run"); d.querySelector(".st").textContent = "EN CURSO"; } log(`[${fmt(j.start)}] ${n.t.replace("◆ ", "")} …`); }
+        if (!n.gate && started.has(n) && !finished.has(n)) d.querySelector(".bar").style.width = Math.min(100, (t - j.start) / j.dur * 100) + "%";
+        if (t >= j.start + j.dur && !finished.has(n)) {
+          finished.add(n);
+          if (n.gate) { d.classList.add("fail"); d.innerHTML = `${n.t} · RECHAZADO<small>${n.res.replace("RECHAZADO: ", "")}</small>`; log(`[${fmt(j.start + j.dur)}] <span class="r">✖ ${n.t.replace("◆ ", "")}: ${n.res}</span>`); }
+          else { d.classList.remove("run"); const bad = !/^Aprobado|0 CVE/.test(n.res); d.classList.add(bad ? "fail" : "done"); d.querySelector(".st").textContent = bad ? "HALLAZGOS" : "OK"; log(`[${fmt(j.start + j.dur)}] ${bad ? '<span class="r">✖</span>' : '<span class="g">✔</span>'} ${n.t}: ${n.res}`); }
+        }
+      });
+      if (t < end + 1) requestAnimationFrame(frame); else res();
+    }
+    requestAnimationFrame(frame);
+  });
+  NODES.cd.forEach(n => { n.dom.classList.add("skip"); n.dom.querySelector(".st").textContent = "OMITIDO"; });
+  log('<span class="y">⏭ CD - Entrega continua: omitido (skipped). No se despliega software con defectos conocidos.</span>');
+  log(`<span class="c">Security: ${human(DATA.sec.reduce((a, j) => a + j.dur, 0))} de cómputo en ${human(end)} reales gracias al paralelismo.</span>`);
+  simRunning = false; $("#simBtn").disabled = false;
+}
+$("#simBtn").onclick = simulate;
+
+/* ---------- pruebas de seguridad (reproducción de resultados reales) ---------- */
+const SEC = [
+  ["SEC-01", "DELETE /usuarios/:id sin token debe responder 401", "A01", "Eliminación de usuarios sin autenticación"],
+  ["SEC-02", "GET /pacientes/buscar/rut/:rut no debe exponer la ficha", "A01", "Confidencialidad de la ficha clínica (Ley 20.584)"],
+  ["SEC-03", "POST /roles sin token debe responder 401", "A01", "CRUD de roles sin autenticación"],
+  ["SEC-04", "PUT /roles/:id sin token debe responder 401", "A01", "Modificación de roles sin control de acceso"],
+  ["SEC-05", "GET /tipo-examen sin token debe responder 401", "A01", "Catálogo accesible sin autenticación"],
+  ["SEC-06", "Un paciente no puede crear administradores", "A01", "Escalamiento de privilegios"],
+  ["SEC-07", "Un paciente no puede ver el detalle de otros usuarios", "A01", "Control existente (única aprobada)"],
+  ["SEC-08", "Un JWT firmado con el secreto publicado no debe aceptarse", "A02/A07", "Secreto JWT expuesto reutilizable"],
+  ["SEC-09", "El login debe limitar los intentos fallidos", "A07", "Sin protección contra fuerza bruta"],
+  ["SEC-10", "La política de contraseñas debe rechazar claves débiles", "A07", "Acepta contraseñas débiles"],
+  ["SEC-11", "Las respuestas deben incluir cabeceras de seguridad", "A05", "Faltan cabeceras HTTP de seguridad"],
+  ["SEC-12", "No debe revelarse la tecnología del servidor", "A05", "Fuga de X-Powered-By"],
+  ["SEC-13", "CORS no debe permitir cualquier origen", "A05", "CORS abierto a cualquier origen"],
+  ["SEC-14", "Los errores no deben exponer detalles internos", "A05", "Divulgación de errores internos de la BD"],
+  ["SEC-15", "Las operaciones administrativas deben auditarse sin error", "A09", "La auditoría falla con HTTP 500"]
+];
+const OWASP = { "A01": "A01 Control de acceso", "A02/A07": "A02/A07 Cripto y autenticación", "A07": "A02/A07 Cripto y autenticación", "A05": "A05 Configuración", "A09": "A09 Registro y auditoría" };
+(function buildAtk() {
+  const list = $("#atkList");
+  SEC.forEach(([id, nm, cat, sub]) => {
+    const r = el("div", "arow", `<div class="id">${id}</div><div class="nm">${nm}<small>${OWASP[cat]} · ${sub}</small></div><div class="res">—</div><div class="ms"></div>`);
+    r.dataset.id = id; r.onclick = () => showRaw(id); list.append(r);
+  });
+  const cats = ["A01 Control de acceso", "A02/A07 Cripto y autenticación", "A05 Configuración", "A09 Registro y auditoría"];
+  $("#owaspBars").innerHTML = cats.map(c => `<div class="row"><span>${c}</span><div class="trk"><div class="fill" data-cat="${c}"></div></div><b data-n="${c}">0</b></div>`).join("");
+})();
+function showRaw(id) {
+  const rec = DATA.replay[id] || {};
+  $("#rawTitle").textContent = `Evidencia · ${id}`;
+  $("#raw").textContent = rec.msg ? rec.msg : "Prueba aún no reproducida. Pulsa «Reproducir».";
+}
+let atkRunning = false;
+function resetAtk() {
+  document.querySelectorAll(".arow").forEach(r => { r.className = "arow"; r.querySelector(".res").textContent = "—"; r.querySelector(".ms").textContent = ""; });
+  $("#atkCount").innerHTML = '0 / 15<small>pruebas fallidas = vulnerabilidades confirmadas</small>';
+  document.querySelectorAll("#owaspBars .fill").forEach(f => f.style.width = "0");
+  document.querySelectorAll("#owaspBars b").forEach(b => b.textContent = "0");
+  $("#raw").textContent = "—"; $("#rawTitle").textContent = "Evidencia de la prueba";
+}
+$("#atkReset").onclick = resetAtk;
+async function replay() {
+  if (atkRunning) return; atkRunning = true; $("#atkBtn").disabled = true; resetAtk();
+  let fails = 0; const catCount = {};
+  for (const [id, nm, cat] of SEC) {
+    const row = document.querySelector(`.arow[data-id="${id}"]`); const rec = DATA.replay[id] || { ok: false, ms: 0 };
+    row.classList.add("runn"); row.querySelector(".res").textContent = "···"; await sleep(130);
+    row.classList.remove("runn");
+    if (rec.ok) { row.classList.add("safe"); row.querySelector(".res").textContent = "SEGURO"; }
+    else {
+      row.classList.add("vuln"); row.querySelector(".res").textContent = "VULNERABLE"; fails++;
+      const g = OWASP[cat]; catCount[g] = (catCount[g] || 0) + 1;
+      const fill = document.querySelector(`#owaspBars .fill[data-cat="${g}"]`); const lbl = document.querySelector(`#owaspBars b[data-n="${g}"]`);
+      lbl.textContent = catCount[g]; fill.style.width = Math.min(100, catCount[g] / 6 * 100) + "%";
+    }
+    row.querySelector(".ms").textContent = (rec.ms || 0) + " ms";
+    $("#atkCount").innerHTML = `${fails} / 15<small>pruebas fallidas = vulnerabilidades confirmadas</small>`;
+    showRaw(id);
+    await sleep(90);
+  }
+  atkRunning = false; $("#atkBtn").disabled = false;
+}
+$("#atkBtn").onclick = replay;
+
+/* ---------- enfoques ---------- */
+const ENF = [
+  { h: "Secret scanning", tool: "Gitleaks", fn: "Busca credenciales, llaves y tokens en los archivos y en todo el historial de git.", rel: "Un secreto filtrado permite suplantar a cualquier usuario sin explotar ningún otro fallo.", found: "JWT_SECRET de 64 caracteres publicado en .env, BACKEND/.env y README.md.", link: "Confirmado por SEC-08: con ese secreto se forjó un token de administrador." },
+  { h: "SAST", tool: "Semgrep + CodeQL", fn: "Analiza el código fuente sin ejecutarlo buscando patrones inseguros y flujo de datos peligroso.", rel: "Encuentra la causa en el código, antes de que llegue a producción.", found: "Comparación de contraseña vulnerable a timing attack (auth.js:21) y 32 rutas sin rate limiting.", link: "CodeQL + SEC-09 confirman la falta de límite de intentos." },
+  { h: "SCA", tool: "npm audit + Trivy fs", fn: "Compara las dependencias declaradas con bases de CVE y GHSA conocidas.", rel: "La mayoría del código de una app son dependencias de terceros.", found: "34 vulnerabilidades: proxy-addr (crítica), jws, path-to-regexp, multer 1.x obsoleto.", link: "Dependabot abre PR semanales para corregirlas." },
+  { h: "IaC / configuración", tool: "Trivy config", fn: "Evalúa Dockerfile y docker-compose contra el CIS Docker Benchmark.", rel: "Una mala configuración del contenedor expone todo lo que corre dentro.", found: "Contenedores ejecutados como root y sin HEALTHCHECK (4 hallazgos).", link: "Se mitiga con USER node y node:22-alpine (H-21)." },
+  { h: "Escaneo de contenedores", tool: "Trivy image", fn: "Detecta CVE en el sistema operativo y el runtime de las imágenes construidas.", rel: "Una imagen base sin soporte arrastra vulnerabilidades aunque el código sea perfecto.", found: "Imagen backend node:18 (fuera de soporte): 4 CVE críticas y 46 altas.", link: "El frontend (nginx) no tiene CVE críticas ni altas." },
+  { h: "DAST", tool: "OWASP ZAP", fn: "Ataca la aplicación en ejecución como un atacante externo: cabeceras, errores, CORS, inyecciones.", rel: "Ve el sistema como lo ve el atacante, sin conocer el código.", found: "CORS *, sin CSP ni anti-clickjacking, X-Powered-By y divulgación de errores.", link: "Coincide con SEC-11 a SEC-14: doble confirmación." },
+  { h: "Pruebas de seguridad propias", tool: "node:test + fetch", fn: "Verifican reglas de negocio que ninguna herramienta genérica conoce: autorización por rol y privilegios.", rel: "La lógica de negocio (quién puede hacer qué) es específica de cada sistema.", found: "Un paciente puede crear administradores; se borran usuarios sin token; la ficha se expone por RUT.", link: "15 casos SEC mapeados a OWASP: 14 fallan." }
+];
+(function buildEnf() {
+  const g = $("#enfGrid");
+  ENF.forEach((e, i) => {
+    const c = el("div", "card ecard", `<h4>${e.h}</h4><div class="tool">${e.tool}</div><div class="det">${e.fn}<br><b>Detectó:</b> ${e.found.split(":")[0]}.</div>`);
+    c.onclick = () => { document.querySelectorAll(".ecard").forEach(x => x.classList.remove("sel")); c.classList.add("sel"); showEnf(e); };
+    g.append(c);
+  });
+  g.append(el("div", "edetail", '<div style="grid-column:1/-1" class="muted">Selecciona un enfoque para ver su finalidad, relevancia, el hallazgo real y la confirmación cruzada.</div>'));
+})();
+function showEnf(e) {
+  $("#enfGrid .edetail").innerHTML = `<div><h5>Finalidad</h5>${e.fn}</div><div><h5>Por qué es relevante</h5>${e.rel}</div><div><h5>Hallazgo real</h5>${e.found}</div><div><h5>Confirmación cruzada</h5>${e.link}</div>`;
+}
+
+/* ---------- matriz normativa ---------- */
+const COLS = ["Pruebas SEC", "Funcionales", "Rend. y ESLint", "Gitleaks", "SAST", "SCA", "IaC e imágenes", "DAST ZAP", "Gates y CD", "Escaneo semanal"];
+const ROWS = [
+  { n: "Ley 19.628 y Ley 21.719", d: "Protección de datos personales sensibles", k: "ley", v: [1, 1, 0, 1, 1, 1, 0, 1, 0, 1], h: "H-01, H-02, H-03, H-05, H-07" },
+  { n: "Ley 20.584", d: "Confidencialidad de la ficha clínica", k: "ley", v: [1, 1, 0, 0, 0, 0, 0, 1, 0, 0], h: "H-02, H-16" },
+  { n: "Ley 21.663", d: "Registro y reporte de incidentes", k: "ley", v: [1, 0, 0, 0, 0, 1, 1, 0, 1, 1], h: "H-13, H-14" },
+  { n: "ISO/IEC 27001:2022", d: "Desarrollo seguro (A.8.25–A.8.29)", k: "iso", v: [1, 0, 0, 1, 1, 1, 1, 1, 1, 1], h: "14 pruebas SEC fallidas" },
+  { n: "ISO/IEC 25010", d: "Funcional, eficiencia, mantenibilidad", k: "iso", v: [0, 1, 1, 0, 0, 0, 0, 0, 1, 0], h: "H-17, H-20" },
+  { n: "OWASP Top 10 / ASVS", d: "Verificación de seguridad de aplicaciones", k: "ow", v: [1, 0, 0, 1, 1, 1, 1, 1, 0, 0], h: "A01, A02, A05, A07, A09" }
+];
+(function buildMx() {
+  const t = $("#mx");
+  t.innerHTML = `<tr><th>Norma o estándar</th>${COLS.map((c, i) => `<th data-col="${i}">${c}</th>`).join("")}<th>Incumplida por</th></tr>` +
+    ROWS.map((r, ri) => `<tr data-row="${ri}"><td><span class="tag t-${r.k}">&nbsp;</span><b>${r.n}</b><small>${r.d}</small></td>${r.v.map(x => `<td>${x ? '<span class="d"></span>' : ""}</td>`).join("")}<td>${r.h}</td></tr>`).join("");
+  t.querySelectorAll("tr[data-row]").forEach(tr => tr.firstElementChild.onclick = () => selRow(+tr.dataset.row));
+  t.querySelectorAll("th[data-col]").forEach(th => th.onclick = () => selCol(+th.dataset.col));
+})();
+function clearMx() { $("#mx").querySelectorAll("tr").forEach(tr => tr.classList.remove("hl")); $("#mx").querySelectorAll("td").forEach(td => td.classList.remove("hc")); }
+function selRow(ri) {
+  clearMx(); const r = ROWS[ri]; $(`#mx tr[data-row="${ri}"]`).classList.add("hl");
+  const controls = COLS.filter((c, i) => r.v[i]);
+  $("#mxDetail").innerHTML = `<b>${r.n}</b> — ${r.d}.<br><span class="muted">La verifican:</span> ${controls.join(" · ")}.<br><span class="muted">Hoy la incumplen:</span> <b style="color:var(--red)">${r.h}</b>.`;
+}
+function selCol(ci) {
+  clearMx(); $("#mx").querySelectorAll("tr[data-row]").forEach(tr => tr.children[ci + 1].classList.add("hc"));
+  const normas = ROWS.filter(r => r.v[ci]);
+  $("#mxDetail").innerHTML = `<b>${COLS[ci]}</b> genera evidencia para: ${normas.map(r => r.n).join(" · ")}.`;
+}
+
+/* ---------- impacto ---------- */
+const KPIS = [["22", "hallazgos detectados"], ["45", "casos automatizados"], ["7", "enfoques de seguridad"], ["0,5 s", "las 15 pruebas de seguridad"]];
+$("#kpis").innerHTML = KPIS.map(([v, l]) => `<div class="card kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
+const CMP = [
+  { l: "Ejecutar los 45 casos", man: 210, aut: 0.77, mt: "≈ 3,5 h", at: "46 s" },
+  { l: "Análisis de seguridad (6 enfoques)", man: 720, aut: 6, mt: "≈ 12 h", at: "6 min" },
+  { l: "Ciclo de verificación de un cambio", man: 930, aut: 6, mt: "≈ 15,5 h", at: "≈ 6 min" }
+];
+(function buildCmp() {
+  $("#cmp").innerHTML = CMP.map(c => `<div class="row"><span>${c.l}</span><div class="bars"><div class="b man" data-w="${c.man}">Manual ${c.mt}</div><div class="b aut" data-w="${c.aut}">Automatizado ${c.at}</div></div></div>`).join("");
+})();
+let impDone = false;
+function animateImpact(force) {
+  if (impDone && !force) return; impDone = true;
+  const max = Math.log10(930);
+  $("#cmp").querySelectorAll(".b").forEach(b => { const w = Math.max(3, Math.log10(Math.max(1, +b.dataset.w)) / max * 100); setTimeout(() => b.style.width = w + "%", 60); });
+  const ci = DATA.ci, sec = DATA.sec; const end = Math.max(...[...ci, ...sec].map(j => j.start + j.dur));
+  const alias = { "Backend - instalación y verificación": "Build backend", "Frontend - lint y build": "Build frontend", "Pruebas automatizadas contra stack Docker": "Entorno + 45 pruebas", "Quality Gate": "Quality Gate", "Secret scanning (Gitleaks)": "Gitleaks", "SAST (Semgrep)": "Semgrep", "SAST (CodeQL)": "CodeQL", "SCA - dependencias (npm audit + Trivy)": "npm audit + Trivy", "IaC / configuración (Trivy config)": "Trivy config", "Escaneo de imágenes Docker (Trivy image) (BACKEND)": "Trivy image backend", "Escaneo de imágenes Docker (Trivy image) (FRONTEND)": "Trivy image frontend", "DAST (OWASP ZAP)": "OWASP ZAP", "Security Gate": "Security Gate" };
+  const rows = [...ci.map(j => ({ ...j, grp: "ci" })), ...sec.map(j => ({ ...j, grp: "sec" }))];
+  $("#gantt").innerHTML = rows.map(j => `<div class="row"><span>${alias[j.name] || j.name}</span><div class="trk"><div class="seg ${/Gate/.test(j.name) ? "g" : j.grp === "ci" ? "ci" : ""}" data-l="${j.start / end * 100}" data-w="${j.dur / end * 100}" style="left:${j.start / end * 100}%"></div></div><span class="muted" style="text-align:right">${human(j.dur)}</span></div>`).join("");
+  $("#gantt").querySelectorAll(".seg").forEach(s => setTimeout(() => s.style.width = Math.max(1, +s.dataset.w) + "%", 120));
+}
+$("#impReplay").onclick = () => animateImpact(true);
+const EVO = [
+  { h: "EP1 · 24-09", l: ["Revisión manual del código", "17 hallazgos, 6 críticos", "Sin ejecución sistemática"] },
+  { h: "EP3 · 29-10", l: ["Plan trazable de 40 casos", "SonarQube y 24 incidentes", "Por tandas; gate solo veía código nuevo"] },
+  { h: "EP5 · hoy", l: ["3 pipelines y 2 gates", "45 casos y 7 enfoques automatizados", "Detección en cada cambio, con evidencia"] }
+];
+$("#evo").innerHTML = EVO.map(e => `<div class="card"><h4>${e.h}</h4><ul>${e.l.map(x => `<li>${x}</li>`).join("")}</ul></div>`).join("");
+
+/* ---------- mantenimiento ---------- */
+const MT = [
+  { n: 1, h: "Correctivo", p: "Mitigar los 22 hallazgos según el SLA de severidad; cada prueba SEC pasa a verde.", k: "iso", norm: "ISO 27001 A.8.8 · OWASP ASVS", st: ["Detectar", "El pipeline reporta el hallazgo con su evidencia"], ciclo: "Operación" },
+  { n: 2, h: "Preventivo", p: "Actualizar dependencias, imágenes base y acciones del pipeline.", k: "iso", norm: "NIST SSDF · Ley 21.663", st: ["Priorizar", "Se ordena por severidad: crítico 7 días, grave 30, moderado 90"], ciclo: "Operación" },
+  { n: 3, h: "Adaptativo", p: "Incorporar requisitos legales nuevos (Ley 21.719) y cambios de plataforma.", k: "ley", norm: "Ley 21.719 · ISO 27001 A.5.31", st: ["Mitigar", "Se corrige el código y se agrega o ajusta la prueba"], ciclo: "Desarrollo" },
+  { n: 4, h: "Perfectivo", p: "Reducir deuda técnica y endurecer umbrales (p95 de 2 s a 300 ms).", k: "iso", norm: "ISO/IEC 25010", st: ["Verificar", "La prueba pasa a verde y queda como regresión permanente"], ciclo: "Integración" }
+];
+$("#mt").innerHTML = MT.map(m => `<div class="card"><h4><span class="n">${m.n}</span>${m.h}</h4><p>${m.p}</p><span class="tag t-${m.k}">${m.norm}</span></div>`).join("");
+const STEPS = [["Detectar", "El control del pipeline encuentra el defecto y publica su evidencia (JUnit, SARIF, JSON).", "Integración / Operación", "ISO 27001 A.8.8"], ["Priorizar", "Se clasifica por severidad y se asigna un plazo: crítico 7 días, grave 30, moderado 90.", "Operación", "Ley 21.663"], ["Mitigar", "Se aplica la solución propuesta en la ficha del hallazgo, sin romper lo demás.", "Desarrollo", "OWASP ASVS"], ["Verificar", "La prueba SEC correspondiente pasa a verde y queda como regresión en cada cambio.", "Integración", "ISO/IEC 25010"]];
+(function buildSteps() {
+  const s = $("#steps");
+  STEPS.forEach(([t], i) => { const b = el("button", i === 0 ? "on" : "", `${i + 1}. ${t}`); b.onclick = () => selStep(i); s.append(b); });
+  selStep(0);
+})();
+function selStep(i) {
+  $("#steps").querySelectorAll("button").forEach((b, j) => b.classList.toggle("on", j === i));
+  const [t, d, c, norm] = STEPS[i];
+  $("#stepd").innerHTML = `<div><h5>Acción</h5><b>${t}</b><br>${d}</div><div><h5>Etapa del ciclo de vida</h5>${c}</div><div><h5>Norma de respaldo</h5>${norm}</div><div><h5>Evidencia</h5>Queda en GitHub Actions y en el informe; alimenta los indicadores.</div>`;
+}
+const IND = [
+  { l: "Hallazgos críticos abiertos", base: "5", meta: "0", p: 100 },
+  { l: "Pruebas de seguridad aprobadas", base: "1 / 15", meta: "15 / 15", p: 93 },
+  { l: "p95 de /pacientes y /examenes", base: "≈ 5 s", meta: "< 2 s", p: 100 },
+  { l: "Dependencias críticas o altas", base: "25", meta: "0", p: 100 },
+  { l: "Errores de ESLint", base: "13", meta: "0", p: 100 }
+];
+$("#ind").innerHTML = IND.map(i => `<div class="row"><span>${i.l}</span><div class="trk"><div class="fill" data-p="${i.p}"></div></div><span><b style="color:var(--red)">${i.base}</b> <span class="muted">→</span> <b style="color:var(--teal)">${i.meta}</b></span></div>`).join("");
+let indDone = false;
+function animateInd() { if (indDone) return; indDone = true; $("#ind").querySelectorAll(".fill").forEach(f => setTimeout(() => f.style.width = f.dataset.p + "%", 80)); }
+
+/* ---------- arranque ---------- */
+show((location.hash || "#pipeline").slice(1));
+</script>
+</body>
+</html>
