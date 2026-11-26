@@ -34,7 +34,7 @@ jobs:
     outputs:
       tag: ${{ steps.meta.outputs.tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - name: Metadatos
@@ -43,13 +43,13 @@ jobs:
       - name: Build imagen backend
         run: |
           docker build --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
-            --label "org.opencontainers.image.revision=${{ github.sha }}" \
+            --label "org.opencontainers.image.revision=${{ github.event.workflow_run.head_sha || github.sha }}" \
             -t "cuidarte-mas-backend:${{ steps.meta.outputs.tag }}" BACKEND
       - name: Build imagen frontend
         run: |
           docker build --build-arg VITE_API_URL=http://localhost:4444 \
             --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
-            --label "org.opencontainers.image.revision=${{ github.sha }}" \
+            --label "org.opencontainers.image.revision=${{ github.event.workflow_run.head_sha || github.sha }}" \
             -t "cuidarte-mas-frontend:${{ steps.meta.outputs.tag }}" FRONTEND
       - name: Exportar imágenes y checksum
         run: |
@@ -63,7 +63,7 @@ jobs:
             echo "- cuidarte-mas-frontend:${{ steps.meta.outputs.tag }}"
             echo "- Tamaño: $(du -h dist/imagenes.tar.gz | cut -f1) · SHA-256: \`$(cut -d' ' -f1 dist/imagenes.sha256)\`"
           } >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: imagenes-${{ steps.meta.outputs.tag }}
           path: dist/
@@ -75,10 +75,10 @@ jobs:
     needs: package
     environment: staging
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: imagenes-${{ needs.package.outputs.tag }}
           path: dist
@@ -113,7 +113,7 @@ jobs:
       - name: Rollback ante fallo
         if: failure()
         run: |
-          echo "::error::Smoke test fallido: se detiene el despliegue (rollback a la versión anterior)."
+          echo "::error::Smoke test fallido: se detiene el despliegue y la versión anterior sigue vigente (rollback)."
           docker compose -f docker-compose.yml -f deploy/docker-compose.staging.yml logs || true
       - name: Detener entorno
         if: always()

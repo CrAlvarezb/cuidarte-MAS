@@ -55,7 +55,7 @@ jobs:
     outputs:
       findings: ${{ steps.scan.outputs.findings }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # analiza todo el historial git
       - name: Gitleaks
@@ -74,7 +74,7 @@ jobs:
             echo "|---|---|---|"
             jq -r '.[] | "| \(.RuleID) | \(.File) | \(.StartLine) |"' reports/gitleaks.json
           } >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: reporte-secretos
@@ -92,7 +92,7 @@ jobs:
     outputs:
       findings: ${{ steps.scan.outputs.findings }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Semgrep (OWASP Top 10, Node.js, React, secretos)
         id: scan
         run: |
@@ -113,12 +113,12 @@ jobs:
               print(f"| {x['extra']['severity']} | {x['check_id'].split('.')[-1]} | {x['path']}:{x['start']['line']} |")
           EOF
       - name: Subir SARIF a GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         continue-on-error: true # requiere repo público o GitHub Advanced Security
         with:
           sarif_file: reports/semgrep.sarif
           category: semgrep
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: reporte-sast-semgrep
@@ -133,12 +133,12 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: github/codeql-action/init@v3
+      - uses: actions/checkout@v7
+      - uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
           queries: security-extended
-      - uses: github/codeql-action/analyze@v3
+      - uses: github/codeql-action/analyze@v4
         with:
           category: codeql
 
@@ -150,8 +150,8 @@ jobs:
       critical: ${{ steps.summary.outputs.critical }}
       high: ${{ steps.summary.outputs.high }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
       - name: npm audit backend y frontend
@@ -188,7 +188,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
           echo "critical=$crit" >> "$GITHUB_OUTPUT"
           echo "high=$high" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: reporte-sca
@@ -201,7 +201,7 @@ jobs:
     outputs:
       findings: ${{ steps.scan.outputs.findings }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Escanear Dockerfiles y docker-compose
         id: scan
         run: |
@@ -218,7 +218,7 @@ jobs:
             echo "|---|---|---|---|"
             jq -r '.Results[]? | .Target as $t | .Misconfigurations[]? | "| \(.Severity) | \(.ID) | \($t) | \(.Title) |"' reports/trivy-config.json
           } >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: reporte-iac
@@ -233,7 +233,7 @@ jobs:
       matrix:
         component: [BACKEND, FRONTEND]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Construir imagen
         run: |
           name=$(echo "${{ matrix.component }}" | tr 'A-Z' 'a-z')
@@ -250,7 +250,7 @@ jobs:
             jq -r '[.Results[]?.Vulnerabilities[]?] | group_by(.Severity) | map("- \(.[0].Severity): \(length)") | .[]' \
               "reports/trivy-image-${{ matrix.component }}.json"
           } >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: reporte-imagen-${{ matrix.component }}
@@ -262,14 +262,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Levantar aplicación completa
         run: |
           docker compose up -d --build
           for i in $(seq 1 60); do curl -fs http://localhost:4444/ && break; sleep 3; done
           curl -fs http://localhost:3333/ > /dev/null
       - name: ZAP API scan (backend)
-        uses: zaproxy/action-api-scan@v0.9.0
+        uses: zaproxy/action-api-scan@v0.10.0
         continue-on-error: true
         with:
           # definición OpenAPI publicada por la propia API (servers -> localhost:4444)
@@ -281,7 +281,7 @@ jobs:
           fail_action: false
           artifact_name: reporte-dast-api
       - name: ZAP baseline scan (frontend)
-        uses: zaproxy/action-baseline@v0.14.0
+        uses: zaproxy/action-baseline@v0.15.0
         continue-on-error: true
         with:
           target: http://localhost:3333

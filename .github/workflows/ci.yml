@@ -50,8 +50,8 @@ jobs:
     outputs:
       syntax: ${{ steps.syntax.outcome }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -78,8 +78,8 @@ jobs:
       lint: ${{ steps.lint.outcome }}
       build: ${{ steps.build.outcome }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
@@ -108,7 +108,7 @@ jobs:
       - name: Build de producción (Vite)
         id: build
         run: npm run build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: reporte-eslint
@@ -124,8 +124,8 @@ jobs:
       security: ${{ steps.security.outcome }}
       performance: ${{ steps.performance.outcome }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -191,7 +191,7 @@ jobs:
         if: always()
         run: docker compose logs cuidarteplus-backend-ev > reports/backend.log 2>&1 || true
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: reportes-pruebas

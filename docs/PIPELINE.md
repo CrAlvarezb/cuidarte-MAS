@@ -54,9 +54,9 @@ flowchart LR
 
     subgraph CD["CD - Entrega continua (cd.yml)"]
         direction TB
-        PK[Empaquetar imágenes<br/>tag = SHA + checksum] --> APR[Environment staging<br/>aprobación manual]
+        PK[Empaquetar imágenes<br/>tag = SHA + checksum] --> APR[Environment staging<br/>revisores configurables]
         APR --> DEPL[Deploy docker compose] --> SMK[Smoke test<br/>API + web + login]
-        SMK -- falla --> RB[Rollback]
+        SMK -- falla --> RB[Detener despliegue<br/>rollback]
     end
 ```
 
@@ -65,11 +65,11 @@ flowchart LR
 | Enfoque | Herramienta | Cuándo se ejecuta | Qué detecta en Cuidarte+ (ejemplos) |
 |---|---|---|---|
 | **Secret scanning** | Gitleaks (todo el historial git) | push, PR, semanal | `JWT_SECRET` en `.env`, `BACKEND/.env` y `README.md` |
-| **SAST** (análisis estático) | Semgrep (OWASP Top 10, nodejsscan, express, react, jwt), CodeQL `security-extended` | push, PR, semanal | secreto JWT por defecto `"inseguro"`, CORS abierto, `Content-Disposition` sin sanitizar, contraseña de BD hardcodeada |
-| **SCA** (dependencias) | `npm audit`, Trivy fs | push, PR, **semanal** (CVE nuevas sin cambios de código) | backend: 7 vulnerabilidades (1 crítica, 4 altas); frontend: 24 (17 altas); `multer` 1.x obsoleto |
-| **IaC / configuración** | Trivy config | push, PR | contenedores que corren como root, sin `HEALTHCHECK`, imagen `node:18` sin soporte |
-| **Escaneo de contenedores** | Trivy image | push, PR | CVE del sistema operativo y de Node en las imágenes publicadas |
-| **DAST** (análisis dinámico) | OWASP ZAP API scan (OpenAPI) + ZAP baseline (frontend) | push, PR | cabeceras de seguridad ausentes, CORS `*`, errores con detalles internos |
+| **SAST** (análisis estático) | Semgrep (OWASP Top 10, nodejsscan, express, react, jwt), CodeQL `security-extended` | push, PR, semanal | Semgrep: comparación de contraseña vulnerable a *timing attack* (`auth.js:21`), XSS reflejado (`documentos.js:206`), escritura directa de archivo (`documentos.js:252`), contenedores sin `USER`; CodeQL: 32 rutas sin *rate limiting* |
+| **SCA** (dependencias) | `npm audit`, Trivy fs | push, PR, **semanal** (CVE nuevas sin cambios de código) | backend: 10 vulnerabilidades (1 crítica, 7 altas, 2 moderadas); frontend: 24 (17 altas, 6 moderadas, 1 baja); `multer` 1.x obsoleto |
+| **IaC / configuración** | Trivy config | push, PR, semanal | 4 malas configuraciones: contenedores que corren como root (2 altas) y sin `HEALTHCHECK` (2 bajas) |
+| **Escaneo de contenedores** | Trivy image | push, PR, semanal | imagen backend `node:18` (fuera de soporte): 4 CVE críticas y 46 altas; frontend: 0 críticas/altas |
+| **DAST** (análisis dinámico) | OWASP ZAP API scan (OpenAPI) + ZAP baseline (frontend) | push, PR, semanal | API: 9 tipos de alerta (CORS `*`, CSP, `X-Powered-By`, errores con detalles internos); frontend: sin CSP ni anti-clickjacking, sin SRI, versión de nginx expuesta |
 | **Pruebas de seguridad automatizadas** | `tests/api/security.test.mjs` | cada CI | control de acceso roto, escalamiento de privilegios, JWT falsificable, sin rate limiting |
 
 ## 4. Pruebas automatizadas (diseño de casos)
@@ -124,3 +124,5 @@ se ejecutan y generan evidencia. Al final, un job de *gate* decide:
 4. **Trazabilidad**: cada imagen desplegada está etiquetada con el SHA del commit, lo que permite auditar y revertir (rollback).
 5. **Gestión de secretos**: el CD lee `JWT_SECRET` desde *GitHub Secrets* (Settings → Secrets → Actions); se recomienda rotar el secreto expuesto.
 6. **Aprobación manual**: configurar *Settings → Environments → staging → Required reviewers*.
+7. **Mantenimiento del propio pipeline**: las acciones se mantienen en versiones soportadas (runtime Node 24; CodeQL Action v4, ya que la v3 se depreca en diciembre de 2026). Dependabot propone estas actualizaciones en el ecosistema `github-actions`.
+8. **Protección de rama** (pendiente de activar por el administrador del repositorio): *Settings → Branches → main* exigiendo que *CI - Build y Pruebas* y *Security - DevSecOps* aprueben antes de integrar.
